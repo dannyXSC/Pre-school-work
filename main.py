@@ -39,7 +39,6 @@ class CustomClassifier(torch.nn.Module):
 
         self.known_data_source = known_data_source
         self.multi_dataset_classes = multi_dataset_classes
-        # 就是常规操作把
         self.channel_bn = torch.nn.BatchNorm1d(
             input_dim,
             affine=False,
@@ -206,9 +205,8 @@ def main(args):
 
     # args.nb_classes is the sum of number of classes for all datasets
     dataset_train, args.nb_classes = build_dataset(is_train=True, args=args)
-    dataset_val, _ = build_dataset(is_train=False, args=args)
+    dataset_val, *_ = build_dataset(is_train=False, args=args)
 
-    # 分布式计算
     if True:  # args.distributed:
         num_tasks = utils.get_world_size()
         global_rank = utils.get_rank()
@@ -230,7 +228,6 @@ def main(args):
         else:
             sampler_val = torch.utils.data.SequentialSampler(dataset_val)
 
-    # 不知道干了什么
     if args.known_data_source :
         data_loader_train = torch.utils.data.DataLoader(
             dataset_train, sampler=sampler_train,

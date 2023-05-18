@@ -23,29 +23,23 @@ class MultiImageFolder(data.Dataset):
         self.loader = loader
         self.transform = transform
 
-        # samples是 【(path_to_sample, class)】
         samples_list = [x.samples for x in dataset_list]
-        # classes 是子类别文件夹的名字的列表【名字】
         classes_list = [x.classes for x in dataset_list]
         self.classes_list = classes_list
         self.dataset_list = dataset_list
-        # 名字的列表
         self.classes = [y for x in self.classes_list for y in x]
 
         start_id = 0
-        # 把所有的图片信息放在一起（put sample together）
         self.samples = []
         for dataset_id, (samples, classes) in enumerate(zip(samples_list, classes_list)) :
             for i, data in enumerate(samples):
                 if not is_test:
                     # concat the taxonomy of all datasets
                     img, target = data[:2]
-                    # 让所有的图片有统一的index编号，还有dataset_id 即，大类之间用dataset_id区别，小类之间也有唯一的key
                     self.samples.append((img, target+start_id, dataset_id))
                     samples[i] = (img, target+start_id)
                 else :
                     img = data
-                    # test的数据，有dataset的信息，但是没有小类的信息
                     self.samples.append((img, None, dataset_id))
             start_id += len(classes)
 
@@ -120,10 +114,8 @@ def build_dataset(is_train, args):
         multi_dataset = MultiImageFolder(dataset_list, transform, is_test=True)
         return multi_dataset, nb_classes, None
     else :
-        # dataset_list就[几个dataset]
         for dataset in args.dataset_list :
             root = os.path.join(args.data_path, dataset, 'train' if is_train else 'val')
-            # 每个dataset会对应生成一个ImageFolder，ImageFolder保存的是下面每个子类（class）的信息，还有子类图片的路径
             dataset = datasets.ImageFolder(root, transform=transform)
             dataset_list.append(dataset)
             nb_classes += len(dataset.classes)
