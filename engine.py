@@ -137,6 +137,7 @@ def test(data_loader, model, device, dataset_id=None, num_classes_list=None, kno
             output = model(images, dataset_id)
         file_ids = data[-1].tolist()
 
+        # 预测的是每个大类里小类的id
         if not know_dataset:
             pred_labels = output.max(-1)[1].tolist()
             # map the concated class_id into original class_id
