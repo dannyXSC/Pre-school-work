@@ -48,8 +48,11 @@ class CustomClassifier(torch.nn.Module):
     def forward(self, img, dataset_id=None):
         # TODO: how to leverage dataset_source in training and infernece stage?
         pdtype = img.dtype
+        print("img shape:{}".format(img.shape))
         feature = self.backbone.forward_features(img).to(pdtype)
+        print("feature shape:{}".format(feature.shape))
         outputs = self.channel_bn(feature)
+        print("outputs shape:{}".format(outputs.shape))
         outputs = self.layers(outputs)
         return outputs
 
@@ -205,7 +208,7 @@ def main(args):
 
     # args.nb_classes is the sum of number of classes for all datasets
     dataset_train, args.nb_classes = build_dataset(is_train=True, args=args)
-    dataset_val, _ = build_dataset(is_train=False, args=args)
+    dataset_val, *_ = build_dataset(is_train=False, args=args)
 
     if True:  # args.distributed:
         num_tasks = utils.get_world_size()
@@ -275,8 +278,9 @@ def main(args):
     # number of classes for each dataset
     multi_dataset_classes = [len(x) for x in dataset_train.classes_list]
 
-    model = CustomClassifier(model, model.embed_dim, args.nb_classes, multi_dataset_classes=multi_dataset_classes, known_data_source=args.known_data_source)
-                    
+    # model = CustomClassifier(model, model.embed_dim, args.nb_classes, multi_dataset_classes=multi_dataset_classes, known_data_source=args.known_data_source)
+    model = CustomClassifier(model, args.nb_classes, args.nb_classes, multi_dataset_classes=multi_dataset_classes, known_data_source=args.known_data_source)
+
     model.to(device)
 
     model_ema = None
