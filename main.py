@@ -279,7 +279,7 @@ def main(args):
     multi_dataset_classes = [len(x) for x in dataset_train.classes_list]
 
     # model = CustomClassifier(model, model.embed_dim, args.nb_classes, multi_dataset_classes=multi_dataset_classes, known_data_source=args.known_data_source)
-    model = CustomClassifier(model, args.nb_classes, args.nb_classes, multi_dataset_classes=multi_dataset_classes, known_data_source=args.known_data_source)
+    model = CustomClassifier(model, model.num_features, args.nb_classes, multi_dataset_classes=multi_dataset_classes, known_data_source=args.known_data_source)
 
     model.to(device)
 
