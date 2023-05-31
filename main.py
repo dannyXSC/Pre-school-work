@@ -27,10 +27,11 @@ import models
 import utils
 import random
 
+from utils import MY_DEBUG
 
 class CustomClassifier(torch.nn.Module):
-    def __init__(self, model, input_dim, output_dim, 
-                    multi_dataset_classes=None, known_data_source=False):
+    def __init__(self, model, input_dim, output_dim,
+                 multi_dataset_classes=None, known_data_source=False):
         '''
         Custom classifier with a Norm layer followed by a Linear layer.
         '''
@@ -48,22 +49,24 @@ class CustomClassifier(torch.nn.Module):
     def forward(self, img, dataset_id=None):
         # TODO: how to leverage dataset_source in training and infernece stage?
         pdtype = img.dtype
-        print("img shape:{}".format(img.shape))
+        MY_DEBUG("img shape:{}".format(img.shape))
         feature = self.backbone.forward_features(img).to(pdtype)
-        print("feature shape:{}".format(feature.shape))
+        MY_DEBUG("feature shape:{}".format(feature.shape))
         outputs = self.channel_bn(feature)
-        print("outputs shape:{}".format(outputs.shape))
+        MY_DEBUG("outputs shape:{}".format(outputs.shape))
         outputs = self.layers(outputs)
         return outputs
 
 
 def get_args_parser():
     parser = argparse.ArgumentParser('DeiT training and evaluation script', add_help=False)
+    # parser.add_argument('--debug', action='store_true', default=False)
     parser.add_argument('--test_only', action='store_true')
     parser.add_argument('--known_data_source', action='store_true', dest='known_data_source', default=True)
     parser.add_argument('--unknown_data_source', action='store_false', dest='known_data_source', default=True)
     parser.add_argument('--dataset_list', type=str, nargs='+',
-                            default=['10shot_cifar100_20200721', '10shot_country211_20210924', '10shot_food_101_20211007', '10shot_oxford_iiit_pets_20211007', '10shot_stanford_cars_20211007'])
+                        default=['10shot_cifar100_20200721', '10shot_country211_20210924', '10shot_food_101_20211007',
+                                 '10shot_oxford_iiit_pets_20211007', '10shot_stanford_cars_20211007'])
 
     parser.add_argument('--batch-size', default=64, type=int)
     parser.add_argument('--epochs', default=50, type=int)
@@ -139,23 +142,21 @@ def get_args_parser():
     parser.add_argument('--repeated-aug', action='store_true')
     parser.add_argument('--no-repeated-aug', action='store_false', dest='repeated_aug')
     parser.set_defaults(repeated_aug=True)
-    
+
     parser.add_argument('--train-mode', action='store_true')
     parser.add_argument('--no-train-mode', action='store_false', dest='train_mode')
     parser.set_defaults(train_mode=True)
-        
-    parser.add_argument('--src', action='store_true') #simple random crop
+
+    parser.add_argument('--src', action='store_true')  # simple random crop
     parser.add_argument('--flip', type=float, default=None, metavar='PCT',
                         help='flip image, both VerticalFlip and HorizontalFlip')
-    
+
     parser.add_argument('--rotation', type=int, default=None, metavar='PCT',
                         help='image Rotation')
-    
-
 
     # * Finetuning params
     parser.add_argument('--finetune', default='', help='finetune from checkpoint')
-    
+
     # Dataset parameters
     parser.add_argument('--data-path', default='/datasets01/imagenet_full_size/061417/', type=str,
                         help='dataset path')
@@ -231,16 +232,16 @@ def main(args):
         else:
             sampler_val = torch.utils.data.SequentialSampler(dataset_val)
 
-    if args.known_data_source :
+    if args.known_data_source:
         data_loader_train = torch.utils.data.DataLoader(
             dataset_train, sampler=sampler_train,
             batch_sampler=None,
             num_workers=args.num_workers,
             pin_memory=args.pin_mem,
-            collate_fn=operator.itemgetter(0), 
+            collate_fn=operator.itemgetter(0),
         )
         data_loader_train = GroupedDataset(data_loader_train, args.batch_size, len(args.dataset_list))
-    else :
+    else:
         data_loader_train = torch.utils.data.DataLoader(
             dataset_train, sampler=sampler_train,
             batch_size=args.batch_size,
@@ -254,8 +255,8 @@ def main(args):
         if args.dist_eval:
             if len(dataset_val) % num_tasks != 0:
                 print('Warning: Enabling distributed evaluation with an eval dataset not divisible by process number. '
-                    'This will slightly alter validation results as extra duplicate entries are added to achieve '
-                    'equal num of samples per-process.')
+                      'This will slightly alter validation results as extra duplicate entries are added to achieve '
+                      'equal num of samples per-process.')
             sampler_val = torch.utils.data.DistributedSampler(
                 dataset_val, num_replicas=num_tasks, rank=global_rank, shuffle=False)
         else:
@@ -271,15 +272,16 @@ def main(args):
         data_loader_val_list.append(data_loader_val)
 
     print(f"Creating model: {args.model}")
-    
+
     # Create a model with the timm function; any other model pre-trained under ImageNet-1k is allowed.
     model = create_model(args.model, num_classes=args.nb_classes, pretrained=True)
-    
+
     # number of classes for each dataset
     multi_dataset_classes = [len(x) for x in dataset_train.classes_list]
 
-    # model = CustomClassifier(model, model.embed_dim, args.nb_classes, multi_dataset_classes=multi_dataset_classes, known_data_source=args.known_data_source)
-    model = CustomClassifier(model, model.num_features, args.nb_classes, multi_dataset_classes=multi_dataset_classes, known_data_source=args.known_data_source)
+    model = CustomClassifier(model, model.embed_dim, args.nb_classes, multi_dataset_classes=multi_dataset_classes, known_data_source=args.known_data_source)
+    # model = CustomClassifier(model, model.num_features, args.nb_classes, multi_dataset_classes=multi_dataset_classes,
+    #                          known_data_source=args.known_data_source)
 
     model.to(device)
 
@@ -304,8 +306,8 @@ def main(args):
 
     # use smaller lr for backbone params
     params = [
-                {'params': backbone_params, 'lr': args.lr * 0.1},
-                {'params': custom_params}
+        {'params': backbone_params, 'lr': args.lr * 0.1},
+        {'params': custom_params}
     ]
     optimizer = torch.optim.AdamW(
         params,
@@ -315,12 +317,12 @@ def main(args):
 
     loss_scaler = NativeScaler()
     lr_scheduler, _ = create_scheduler(args, optimizer)
-    
+
     if args.smoothing:
         criterion = LabelSmoothingCrossEntropy(smoothing=args.smoothing)
     else:
         criterion = torch.nn.CrossEntropyLoss()
-        
+
     if args.bce_loss:
         criterion = torch.nn.BCEWithLogitsLoss()
 
@@ -341,7 +343,7 @@ def main(args):
             if 'scaler' in checkpoint:
                 loss_scaler.load_state_dict(checkpoint['scaler'])
         lr_scheduler.step(args.start_epoch)
-    
+
     if args.test_only:
         # the format of submitted json
         # {
@@ -355,7 +357,7 @@ def main(args):
         result_list['n_parameters'] = n_parameters
         for dataset_id, data_loader_val in enumerate(data_loader_val_list):
             pred_json = test(data_loader_val, model, device, dataset_id, num_classes_list=multi_dataset_classes,
-                                know_dataset=args.known_data_source)
+                             know_dataset=args.known_data_source)
             result_list[args.dataset_list[dataset_id]] = pred_json
         with open(pred_path, 'w') as f:
             json.dump(result_list, f)
@@ -364,8 +366,9 @@ def main(args):
     if args.eval:
         for dataset_id, data_loader_val in enumerate(data_loader_val_list):
             test_stats = evaluate(data_loader_val, model, device, dataset_id)
-            print(f"Accuracy of the network on {args.dataset_list[dataset_id]} of {len(dataset_val_total.dataset_list[dataset_id])} "
-                    f"test images: {test_stats['acc1']:.1f}%")
+            print(
+                f"Accuracy of the network on {args.dataset_list[dataset_id]} of {len(dataset_val_total.dataset_list[dataset_id])} "
+                f"test images: {test_stats['acc1']:.1f}%")
 
         return
 
@@ -380,8 +383,9 @@ def main(args):
             model, criterion, data_loader_train,
             optimizer, device, epoch, loss_scaler,
             args.clip_grad, model_ema,
-            set_training_mode=args.train_mode,  # keep in eval mode for deit finetuning / train mode for training and deit III finetuning
-            args = args,
+            set_training_mode=args.train_mode,
+            # keep in eval mode for deit finetuning / train mode for training and deit III finetuning
+            args=args,
         )
 
         # TODO: Consistent lr now
@@ -398,14 +402,15 @@ def main(args):
                     'scaler': loss_scaler.state_dict(),
                     'args': args,
                 }, checkpoint_path)
-             
-        if (epoch + 1) % 10 == 0 or epoch + 1 == args.epochs :
+
+        if (epoch + 1) % 10 == 0 or epoch + 1 == args.epochs:
             test_stats_total = {}
             test_stats_list = []
             for dataset_id, data_loader_val in enumerate(data_loader_val_list):
                 test_stats = evaluate(data_loader_val, model, device, dataset_id)
                 test_stats_list.append(test_stats)
-                print(f"Accuracy of the network on {args.dataset_list[dataset_id]} of {len(dataset_val_total.dataset_list[dataset_id])} test images: {test_stats['acc1']:.1f}%")
+                print(
+                    f"Accuracy of the network on {args.dataset_list[dataset_id]} of {len(dataset_val_total.dataset_list[dataset_id])} test images: {test_stats['acc1']:.1f}%")
                 for k, v in test_stats.items():
                     test_stats_total['dataset_{}_{}'.format(args.dataset_list[dataset_id], k)] = v
 
@@ -424,13 +429,13 @@ def main(args):
                             'scaler': loss_scaler.state_dict(),
                             'args': args,
                         }, checkpoint_path)
-                
+
             print(f'Max accuracy: {max_accuracy:.2f}%')
 
             log_stats = {**{f'train_{k}': v for k, v in train_stats.items()},
-                        **{f'test_{k}': v for k, v in test_stats_total.items()},
-                        'epoch': epoch,
-                        'n_parameters': n_parameters}
+                         **{f'test_{k}': v for k, v in test_stats_total.items()},
+                         'epoch': epoch,
+                         'n_parameters': n_parameters}
 
             if args.output_dir and utils.is_main_process():
                 with (output_dir / "log.txt").open("a") as f:
