@@ -1,0 +1,1 @@
+python main.py --data-path "/remote-home/share/course23/aicourse_dataset_final/" 
