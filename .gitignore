@@ -6,3 +6,4 @@ checkpoints/
 /datasets
 
 *.pth
+*.zip
