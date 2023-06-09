@@ -1,4 +1,4 @@
-model_name="vit_base_patch16_224"
+model_name="cait_xxs24_384"
 # train
 python main.py \
     --data-path "/remote-home/share/course23/aicourse_dataset_final/" \
@@ -8,8 +8,7 @@ python main.py \
     --lr 1e-4 \
     --weight-decay 0.01 \
     --output_dir output/${model_name}
-;
-
+&&
 # test
 python main.py \
     --data-path "/remote-home/share/course23/aicourse_dataset_final/" \
@@ -21,4 +20,3 @@ python main.py \
     --output_dir output/${model_name} \
     --test_only \
     --resume "output/${model_name}/best_checkpoint.pth"
-;
