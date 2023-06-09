@@ -8,4 +8,4 @@ python main.py \
     --weight-decay 0.01 \
     --output_dir output/${model_name} \
     --test_only
-    --resume output/${model_name}/best_checkpoint.pth
+    --resume "output/${model_name}/best_checkpoint.pth"
