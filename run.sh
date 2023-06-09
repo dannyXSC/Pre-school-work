@@ -1,4 +1,4 @@
-model_name="deit_tiny_patch16_224"
+model_name="regnetx_002"
 python main.py \
     --data-path "/remote-home/share/course23/aicourse_dataset_final/" \
     --model ${model_name} \
