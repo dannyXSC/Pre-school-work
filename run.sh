@@ -1,4 +1,4 @@
-model_name="tv_densenet121"
+model_name="vit_base_patch16_224"
 # train
 python main.py \
     --data-path "/remote-home/share/course23/aicourse_dataset_final/" \
