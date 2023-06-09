@@ -20,3 +20,5 @@ python main.py \
     --output_dir output/${model_name} \
     --test_only \
     --resume "output/${model_name}/best_checkpoint.pth"
+
+
