@@ -36,3 +36,6 @@ python main.py --model $selected_model --batch-size 64 --data-path $path_to_data
 ## Submit
 You should submit a zip file containing the ```pred_all.json``` file into the colab website. 
 
+
+cait_xxs36_224 0.2125849204
+
