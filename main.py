@@ -393,7 +393,10 @@ def main(args):
         # TODO: Consistent lr now
         # how to use a lr scheduler for better convergence.
         if args.sched:
+            before_lr = optimizer.param_groups[0]["lr"]
             lr_scheduler.step(epoch)
+            after_lr = optimizer.param_groups[0]["lr"]
+            print("Epoch %d: lr %.4f -> %.4f" % (epoch, before_lr, after_lr))
 
         if args.output_dir:
             checkpoint_paths = [output_dir / 'checkpoint.pth']
