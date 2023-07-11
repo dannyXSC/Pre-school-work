@@ -396,7 +396,7 @@ def main(args):
             before_lr = optimizer.param_groups[0]["lr"]
             lr_scheduler.step(epoch)
             after_lr = optimizer.param_groups[0]["lr"]
-            print("Epoch %d: lr %.4f -> %.4f" % (epoch, before_lr, after_lr))
+            print("Epoch %d: lr %.7f -> %.7f" % (epoch, before_lr, after_lr))
 
         if args.output_dir:
             checkpoint_paths = [output_dir / 'checkpoint.pth']
