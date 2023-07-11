@@ -29,6 +29,7 @@ import random
 
 from utils import MY_DEBUG
 
+
 class CustomClassifier(torch.nn.Module):
     def __init__(self, model, input_dim, output_dim,
                  multi_dataset_classes=None, known_data_source=False):
@@ -279,9 +280,10 @@ def main(args):
     # number of classes for each dataset
     multi_dataset_classes = [len(x) for x in dataset_train.classes_list]
 
-    model = CustomClassifier(model, model.embed_dim, args.nb_classes, multi_dataset_classes=multi_dataset_classes, known_data_source=args.known_data_source)
+    model = CustomClassifier(model, model.embed_dim, args.nb_classes, multi_dataset_classes=multi_dataset_classes,
+                             known_data_source=args.known_data_source)
     # model = CustomClassifier(model, model.num_features, args.nb_classes, multi_dataset_classes=multi_dataset_classes,
-                            #  known_data_source=args.known_data_source)
+    #  known_data_source=args.known_data_source)
 
     model.to(device)
 
@@ -390,6 +392,12 @@ def main(args):
 
         # TODO: Consistent lr now
         # how to use a lr scheduler for better convergence.
+        before_lr = optimizer.param_groups[0]["lr"]
+        lr_scheduler.step()
+        after_lr = optimizer.param_groups[0]["lr"]
+        print("Epoch %d: lr %.4f -> %.4f" % (epoch, before_lr, after_lr))
+
+
         if args.output_dir:
             checkpoint_paths = [output_dir / 'checkpoint.pth']
             for checkpoint_path in checkpoint_paths:
