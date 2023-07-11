@@ -1,4 +1,4 @@
-model_name="resnet18"
+model_name="vgg11"
 python main.py \
     --data-path "/remote-home/share/course23/aicourse_dataset_final/" \
     --model ${model_name} \
