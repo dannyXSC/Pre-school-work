@@ -320,6 +320,12 @@ def main(args):
     loss_scaler = NativeScaler()
     lr_scheduler, _ = create_scheduler(args, optimizer)
 
+    for epoch in range(50):
+        before_lr = optimizer.param_groups[0]["lr"]
+        lr_scheduler.step(epoch)
+        after_lr = optimizer.param_groups[0]["lr"]
+        print("Epoch %d: lr %.7f -> %.7f" % (epoch, before_lr, after_lr))
+
     if args.smoothing:
         criterion = LabelSmoothingCrossEntropy(smoothing=args.smoothing)
     else:
