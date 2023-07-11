@@ -8,4 +8,10 @@ python main.py \
     --output_dir output/${model_name} \
 
 
+
+
+#    --flip \
+#    --rotation
+
+
 # pnasnet byobnet cait coat convit cspnet
