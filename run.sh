@@ -14,4 +14,4 @@ python main.py \
 #    --rotation
 
 
-# pnasnet byobnet cait coat convit cspnet
+# tnt_s_patch16_224 swin_tiny_patch4_window7_224
