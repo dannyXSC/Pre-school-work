@@ -394,7 +394,7 @@ def main(args):
         # how to use a lr scheduler for better convergence.
         if args.sched:
             before_lr = optimizer.param_groups[0]["lr"]
-            lr_scheduler.step()
+            lr_scheduler.step(epoch)
             after_lr = optimizer.param_groups[0]["lr"]
             print("Epoch %d: lr %.7f -> %.7f" % (epoch, before_lr, after_lr))
 
