@@ -1,4 +1,4 @@
-model_name="resmlp_12_224"
+model_name="pit_b_224"
 python main.py \
     --data-path "/remote-home/share/course23/aicourse_dataset_final/" \
     --model ${model_name} \
@@ -13,5 +13,3 @@ python main.py \
 #    --flip \
 #    --rotation
 
-
-# tnt_s_patch16_224 swin_tiny_patch4_window7_224
