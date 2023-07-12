@@ -1,4 +1,4 @@
-model_name="mixer_b16_224"
+model_name="gmixer_24_224"
 python main.py \
     --data-path "/remote-home/share/course23/aicourse_dataset_final/" \
     --model ${model_name} \
