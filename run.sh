@@ -6,6 +6,6 @@ python main.py \
     --epochs 50 \
     --weight-decay 0.01 \
     --output_dir output/${model_name} \
-    --flip \
-    --rotation
+    --flip 0.5\
+    --rotation 180
 
