@@ -7,5 +7,5 @@ python main.py \
     --weight-decay 0.01 \
     --output_dir output/${model_name} \
     --flip 0.5\
-    --rotation 180
-
+    --rotation 180 \
+    --args.sched 'tanh'
