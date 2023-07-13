@@ -28,7 +28,8 @@ class MultiImageFolder(data.Dataset):
         self.transform = transform
 
         samples_list = [x.samples for x in dataset_list]
-        print("samples_list:".format(samples_list))
+        for item in samples_list:
+            print("samples_list:".format(item))
         classes_list = [x.classes for x in dataset_list]
         self.classes_list = classes_list
         self.dataset_list = dataset_list
