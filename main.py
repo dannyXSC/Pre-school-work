@@ -155,6 +155,9 @@ def get_args_parser():
     parser.add_argument('--rotation', type=int, default=None, metavar='PCT',
                         help='image Rotation')
 
+    parser.add_argument('--add_origin_image', action='store_true', default=False,
+                        help='add origin image to dataset or not when augmentation')
+
     # * Finetuning params
     parser.add_argument('--finetune', default='', help='finetune from checkpoint')
 
