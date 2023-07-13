@@ -8,7 +8,8 @@ from torchvision import datasets, transforms
 from torchvision.datasets.folder import ImageFolder, default_loader
 from torch.utils.data.sampler import BatchSampler, Sampler
 
-from timm.data.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD, IMAGENET_INCEPTION_MEAN, IMAGENET_INCEPTION_STD
+from timm.data.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD, IMAGENET_INCEPTION_MEAN, \
+    IMAGENET_INCEPTION_STD
 from timm.data import create_transform
 from torchvision.datasets.vision import VisionDataset
 
@@ -18,9 +19,10 @@ import addPepperNoise
 import utils
 import itertools
 
+
 class MultiImageFolder(data.Dataset):
-    def __init__(self, dataset_list, transform, loader = default_loader, 
-                    known_data_source=True, is_test=False) -> None:
+    def __init__(self, dataset_list, transform, loader=default_loader,
+                 known_data_source=True, is_test=False) -> None:
         super().__init__()
         self.loader = loader
         self.transform = transform
@@ -33,14 +35,14 @@ class MultiImageFolder(data.Dataset):
 
         start_id = 0
         self.samples = []
-        for dataset_id, (samples, classes) in enumerate(zip(samples_list, classes_list)) :
+        for dataset_id, (samples, classes) in enumerate(zip(samples_list, classes_list)):
             for i, data in enumerate(samples):
                 if not is_test:
                     # concat the taxonomy of all datasets
                     img, target = data[:2]
-                    self.samples.append((img, target+start_id, dataset_id))
-                    samples[i] = (img, target+start_id)
-                else :
+                    self.samples.append((img, target + start_id, dataset_id))
+                    samples[i] = (img, target + start_id)
+                else:
                     img = data
                     self.samples.append((img, None, dataset_id))
             start_id += len(classes)
@@ -48,7 +50,7 @@ class MultiImageFolder(data.Dataset):
     def __len__(self, ):
         return len(self.samples)
 
-    def __getitem__(self, index) :
+    def __getitem__(self, index):
         """
         Returns:
             sample: the tensor of the input image
@@ -65,7 +67,7 @@ class MultiImageFolder(data.Dataset):
 
 
 class TestFolder(data.Dataset):
-    def __init__(self, image_root, transform, loader = default_loader):
+    def __init__(self, image_root, transform, loader=default_loader):
         self.transform = transform
         self.loader = loader
         self.samples = []
@@ -83,7 +85,7 @@ class TestFolder(data.Dataset):
         id_name = file_name.split('.')[0]
         return int(id_name)
 
-    def __getitem__(self, index) :
+    def __getitem__(self, index):
         """
         Returns:
             sample: the tensor of the input image
@@ -108,15 +110,15 @@ def build_dataset(is_train, args):
     nb_classes = 0
 
     if is_test:
-        for dataset in args.dataset_list :
+        for dataset in args.dataset_list:
             root = os.path.join(args.data_path, dataset)
             dataset = TestFolder(root, transform=transform)
             dataset_list.append(dataset)
             nb_classes += len(dataset.classes)
         multi_dataset = MultiImageFolder(dataset_list, transform, is_test=True)
         return multi_dataset, nb_classes, None
-    else :
-        for dataset in args.dataset_list :
+    else:
+        for dataset in args.dataset_list:
             root = os.path.join(args.data_path, dataset, 'train' if is_train else 'val')
             dataset = datasets.ImageFolder(root, transform=transform)
             dataset_list.append(dataset)
@@ -128,17 +130,22 @@ def build_dataset(is_train, args):
 
 
 def build_transform(is_train, args, img_size=224,
-                        mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD):
+                    mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD):
     # TODO: does any other data augmentation work better?
     if is_train:
         t = []
         t.append(transforms.Resize(img_size))
         t.append(transforms.CenterCrop(img_size))
-        if args.flip:
-            t.append(transforms.RandomVerticalFlip(p = args.flip))
-            t.append(transforms.RandomHorizontalFlip(p = args.flip))
-        if args.rotation:
-            t.append(transforms.RandomRotation(args.rotation))
+        if args.flip and args.rotation:
+            transforms.RandomChoice(
+                [transforms.RandomVerticalFlip(p=args.flip), transforms.RandomHorizontalFlip(p=args.flip),
+                 transforms.RandomRotation(args.rotation)])
+        else:
+            if args.flip:
+                t.append(transforms.RandomVerticalFlip(p=args.flip))
+                t.append(transforms.RandomHorizontalFlip(p=args.flip))
+            if args.rotation:
+                t.append(transforms.RandomRotation(args.rotation))
         # 增加白噪音
         t.append(addPepperNoise.AddPepperNoise(0.9, p=0.5))
         t.append(transforms.ToTensor())
@@ -167,7 +174,7 @@ class GroupedDataset(torch.utils.data.IterableDataset):
 
     def __iter__(self):
         iter_id = 0
-        while True :
+        while True:
             for d in self.dataset:
                 image, target, dataset_id = d
                 bucket = self._buckets[dataset_id]
@@ -179,6 +186,6 @@ class GroupedDataset(torch.utils.data.IterableDataset):
                     dataset_ids = torch.tensor(dataset_ids)
                     del bucket[:]
                     yield images, targets, dataset_ids
-                    iter_id +=1
+                    iter_id += 1
                     if iter_id == len(self):
                         return
