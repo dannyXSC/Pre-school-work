@@ -28,8 +28,6 @@ class MultiImageFolder(data.Dataset):
         self.transform = transform
 
         samples_list = [x.samples for x in dataset_list]
-        for item in samples_list:
-            print("samples_list:{}".format(item))
         classes_list = [x.classes for x in dataset_list]
         self.classes_list = classes_list
         self.dataset_list = dataset_list
@@ -50,7 +48,7 @@ class MultiImageFolder(data.Dataset):
             start_id += len(classes)
 
     def __len__(self, ):
-        return len(self.samples)
+        return len(self.samples) * 2
 
     def __getitem__(self, index):
         """
@@ -59,11 +57,19 @@ class MultiImageFolder(data.Dataset):
             target: a int tensor of class id
             dataset_id: a int number indicating the dataset id
         """
+        length = len(self.samples)
+        flag = False
+        if index >= length:
+            flag = True
+            index = index % length
+
         path, target, dataset_id = self.samples[index]
         sample = self.loader(path)
 
-        if self.transform is not None:
+        if self.transform is not None and flag:
             sample = self.transform(sample)
+        else:
+            sample = build_standard_transform()(sample)
 
         return sample, target, dataset_id
 
@@ -154,6 +160,11 @@ def build_transform(is_train, args, img_size=224,
         t.append(transforms.Normalize(mean, std))
         return transforms.Compose(t)
 
+    return build_standard_transform(img_size, mean, std)
+
+
+def build_standard_transform(img_size=224,
+                             mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD):
     t = []
     t.append(transforms.Resize(img_size))
     t.append(transforms.CenterCrop(img_size))
