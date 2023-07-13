@@ -20,7 +20,7 @@ import utils
 import itertools
 
 
-class MultiImageFolder(data.Dataset):
+class MultiImageFolder_AddOrigin(data.Dataset):
     def __init__(self, dataset_list, transform, loader=default_loader,
                  known_data_source=True, is_test=False) -> None:
         super().__init__()
@@ -70,6 +70,52 @@ class MultiImageFolder(data.Dataset):
             sample = self.transform(sample)
         else:
             sample = build_standard_transform()(sample)
+
+        return sample, target, dataset_id
+
+
+class MultiImageFolder(data.Dataset):
+    def __init__(self, dataset_list, transform, loader=default_loader,
+                 known_data_source=True, is_test=False) -> None:
+        super().__init__()
+        self.loader = loader
+        self.transform = transform
+
+        samples_list = [x.samples for x in dataset_list]
+        classes_list = [x.classes for x in dataset_list]
+        self.classes_list = classes_list
+        self.dataset_list = dataset_list
+        self.classes = [y for x in self.classes_list for y in x]
+
+        start_id = 0
+        self.samples = []
+        for dataset_id, (samples, classes) in enumerate(zip(samples_list, classes_list)):
+            for i, data in enumerate(samples):
+                if not is_test:
+                    # concat the taxonomy of all datasets
+                    img, target = data[:2]
+                    self.samples.append((img, target + start_id, dataset_id))
+                    samples[i] = (img, target + start_id)
+                else:
+                    img = data
+                    self.samples.append((img, None, dataset_id))
+            start_id += len(classes)
+
+    def __len__(self, ):
+        return len(self.samples)
+
+    def __getitem__(self, index):
+        """
+        Returns:
+            sample: the tensor of the input image
+            target: a int tensor of class id
+            dataset_id: a int number indicating the dataset id
+        """
+        path, target, dataset_id = self.samples[index]
+        sample = self.loader(path)
+
+        if self.transform is not None:
+            sample = self.transform(sample)
 
         return sample, target, dataset_id
 
@@ -132,7 +178,7 @@ def build_dataset(is_train, args):
             dataset_list.append(dataset)
             nb_classes += len(dataset.classes)
 
-        multi_dataset = MultiImageFolder(dataset_list, transform, known_data_source=args.known_data_source)
+        multi_dataset = MultiImageFolder_AddOrigin(dataset_list, transform, known_data_source=args.known_data_source)
 
         return multi_dataset, nb_classes
 
