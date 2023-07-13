@@ -8,4 +8,4 @@ python main.py \
     --output_dir output/${model_name} \
     --flip 0.5\
     --rotation 180 \
-    --args.sched 'tanh'
+    --sched 'tanh'
