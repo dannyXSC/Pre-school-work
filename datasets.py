@@ -13,6 +13,8 @@ from timm.data import create_transform
 from torchvision.datasets.vision import VisionDataset
 
 import torch.utils.data as data
+
+import addPepperNoise
 import utils
 import itertools
 
@@ -137,6 +139,8 @@ def build_transform(is_train, args, img_size=224,
             t.append(transforms.RandomHorizontalFlip(p = args.flip))
         if args.rotation:
             t.append(transforms.RandomRotation(args.rotation))
+        # 增加白噪音
+        t.append(addPepperNoise.AddPepperNoise(0.9, p=0.5))
         t.append(transforms.ToTensor())
         t.append(transforms.Normalize(mean, std))
         return transforms.Compose(t)
