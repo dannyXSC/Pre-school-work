@@ -195,10 +195,13 @@ def build_transform(is_train, args, img_size=224,
         t = []
         t.append(transforms.Resize(img_size))
         t.append(transforms.CenterCrop(img_size))
-        if args.flip and args.rotation:
-            transforms.RandomChoice(
+        if args.add_origin_image:
+            print("add_origin_image:{}".format(args.add_origin_image))
+            t.append(transforms.RandomChoice(
                 [transforms.RandomVerticalFlip(p=args.flip), transforms.RandomHorizontalFlip(p=args.flip),
-                 transforms.RandomRotation(args.rotation)])
+                 transforms.RandomRotation(args.rotation)]))
+            t.append(transforms.RandomAffine(0, translate=(0.5, 0.5)))
+            t.append(transforms.RandomPerspective(distortion_scale=0.5, p=0.5, interpolation=2, fill=0))
         else:
             if args.flip:
                 t.append(transforms.RandomVerticalFlip(p=args.flip))
