@@ -59,7 +59,7 @@ class MultiImageFolder_AddOrigin(data.Dataset):
             dataset_id: a int number indicating the dataset id
         """
         length = len(self.samples)
-        type_idx = index / length
+        type_idx = index // length
         index = index % length
 
         path, target, dataset_id = self.samples[index]
