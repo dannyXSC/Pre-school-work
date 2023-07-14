@@ -26,6 +26,7 @@ class MultiImageFolder_AddOrigin(data.Dataset):
         super().__init__()
         self.loader = loader
         self.transform = transform
+        self.num_transform = len(transform) + 1
 
         samples_list = [x.samples for x in dataset_list]
         classes_list = [x.classes for x in dataset_list]
@@ -48,7 +49,7 @@ class MultiImageFolder_AddOrigin(data.Dataset):
             start_id += len(classes)
 
     def __len__(self, ):
-        return len(self.samples) * 2
+        return len(self.samples) * self.num_transform
 
     def __getitem__(self, index):
         """
@@ -58,16 +59,14 @@ class MultiImageFolder_AddOrigin(data.Dataset):
             dataset_id: a int number indicating the dataset id
         """
         length = len(self.samples)
-        flag = False
-        if index >= length:
-            flag = True
-            index = index % length
+        type_idx = index / length
+        index = index % length
 
         path, target, dataset_id = self.samples[index]
         sample = self.loader(path)
 
-        if self.transform is not None and flag:
-            sample = self.transform(sample)
+        if self.transform is not None and type_idx > 0:
+            sample = self.transform[type_idx - 1](sample)
         else:
             sample = build_standard_transform()(sample)
 
@@ -182,6 +181,7 @@ def build_dataset(is_train, args):
             multi_dataset = MultiImageFolder_AddOrigin(dataset_list, transform,
                                                        known_data_source=args.known_data_source)
         else:
+            # eval
             multi_dataset = MultiImageFolder(dataset_list, transform,
                                              known_data_source=args.known_data_source)
 
@@ -192,27 +192,16 @@ def build_transform(is_train, args, img_size=224,
                     mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD):
     # TODO: does any other data augmentation work better?
     if is_train:
-        t = []
-        t.append(transforms.Resize(img_size))
-        t.append(transforms.CenterCrop(img_size))
-        if args.add_origin_image:
-            print("add_origin_image:{}".format(args.add_origin_image))
-            t.append(transforms.RandomChoice(
-                [transforms.RandomVerticalFlip(p=args.flip), transforms.RandomHorizontalFlip(p=args.flip),
-                 transforms.RandomRotation(args.rotation)]))
-            t.append(transforms.RandomAffine(0, translate=(0.5, 0.5)))
-            t.append(transforms.RandomPerspective(distortion_scale=0.5, p=0.5, interpolation=2, fill=0))
-        else:
-            if args.flip:
-                t.append(transforms.RandomVerticalFlip(p=args.flip))
-                t.append(transforms.RandomHorizontalFlip(p=args.flip))
-            if args.rotation:
-                t.append(transforms.RandomRotation(args.rotation))
+        t_list = []
+        t_list.append(build_customerised_transform(transforms.RandomChoice(
+            [transforms.RandomVerticalFlip(p=args.flip), transforms.RandomHorizontalFlip(p=args.flip),
+             transforms.RandomRotation(args.rotation)])), img_size=img_size, mean=mean, std=std)
+        t_list.append(transforms.RandomAffine(0, translate=(0.5, 0.5)))
+        t_list.append(transforms.RandomPerspective(distortion_scale=0.5, p=0.5, interpolation=2, fill=0))
         # 增加白噪音
-        t.append(addPepperNoise.AddPepperNoise(0.9, p=0.5))
-        t.append(transforms.ToTensor())
-        t.append(transforms.Normalize(mean, std))
-        return transforms.Compose(t)
+        t_list.append(addPepperNoise.AddPepperNoise(0.9, p=0.5))
+
+        return t_list
 
     return build_standard_transform(img_size, mean, std)
 
@@ -222,6 +211,21 @@ def build_standard_transform(img_size=224,
     t = []
     t.append(transforms.Resize(img_size))
     t.append(transforms.CenterCrop(img_size))
+    t.append(transforms.ToTensor())
+    t.append(transforms.Normalize(mean, std))
+    return transforms.Compose(t)
+
+
+def build_customerised_transform(T, img_size=224,
+                                 mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD):
+    t = []
+    t.append(transforms.Resize(img_size))
+    t.append(transforms.CenterCrop(img_size))
+    if isinstance(T, list):
+        for item in T:
+            t.append(item)
+    else:
+        t.append(T)
     t.append(transforms.ToTensor())
     t.append(transforms.Normalize(mean, std))
     return transforms.Compose(t)
