@@ -178,7 +178,12 @@ def build_dataset(is_train, args):
             dataset_list.append(dataset)
             nb_classes += len(dataset.classes)
 
-        multi_dataset = MultiImageFolder_AddOrigin(dataset_list, transform, known_data_source=args.known_data_source)
+        if is_train:
+            multi_dataset = MultiImageFolder_AddOrigin(dataset_list, transform,
+                                                       known_data_source=args.known_data_source)
+        else:
+            multi_dataset = MultiImageFolder(dataset_list, transform,
+                                             known_data_source=args.known_data_source)
 
         return multi_dataset, nb_classes
 
