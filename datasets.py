@@ -196,6 +196,8 @@ def build_transform(is_train, args, img_size=224,
         t_list.append(transforms.Compose(
             [transforms.Resize(img_size), transforms.RandomCrop(img_size), transforms.ToTensor(),
              transforms.Normalize(mean, std)]))
+
+
         if args.flip and args.rotation:
             # t_list.append(build_customerised_transform(transforms.RandomChoice(
             #     [transforms.RandomVerticalFlip(p=args.flip), transforms.RandomHorizontalFlip(p=args.flip),
