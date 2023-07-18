@@ -213,7 +213,12 @@ def build_transform(is_train, args, img_size=224,
         t_list.append(
             build_customerised_transform(addPepperNoise.AddPepperNoise(0.9, p=0.5), img_size=img_size, mean=mean,
                                          std=std))
-
+        t_list.append(
+            build_customerised_transform(transforms.ColorJitter(hue=0.5), img_size=img_size, mean=mean,
+                                         std=std))
+        t_list.append(
+            build_customerised_transform(transforms.RandomGrayscale(p=1), img_size=img_size, mean=mean,
+                                         std=std))
         return t_list
 
     return build_standard_transform(img_size, mean, std)
