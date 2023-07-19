@@ -52,6 +52,7 @@ class CustomClassifier(torch.nn.Module):
         pdtype = img.dtype
         MY_DEBUG("img shape:{}".format(img.shape))
         feature = self.backbone.forward_features(img).to(pdtype)
+        feature = feature.reshape(feature.shape[0], feature.shape[1], -1)
         MY_DEBUG("feature shape:{}".format(feature.shape))
         outputs = self.channel_bn(feature)
         MY_DEBUG("outputs shape:{}".format(outputs.shape))
