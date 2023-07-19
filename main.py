@@ -41,7 +41,7 @@ class CustomClassifier(torch.nn.Module):
 
         self.known_data_source = known_data_source
         self.multi_dataset_classes = multi_dataset_classes
-        self.pool = torch.nn.MaxPool2d(7)
+        self.pool = torch.nn.AvgPool2d(7)
 
         self.channel_bn = torch.nn.BatchNorm1d(
             input_dim,
