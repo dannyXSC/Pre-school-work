@@ -7,7 +7,6 @@ import torch
 from torchvision import datasets, transforms
 from torchvision.datasets.folder import ImageFolder, default_loader
 from torch.utils.data.sampler import BatchSampler, Sampler
-from torchvision.transforms.functional import crop
 
 from timm.data.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD, IMAGENET_INCEPTION_MEAN, \
     IMAGENET_INCEPTION_STD
@@ -189,27 +188,14 @@ def build_dataset(is_train, args):
         return multi_dataset, nb_classes
 
 
-def my_crop_top_left(image):
-    return crop(image, 0, 0, 224, 224)
-
-
-def my_crop_top_right(image):
-    return crop(image, 0, 32, 224, 224)
-
-
-def my_crop_down_left(image):
-    return crop(image, 32, 0, 224, 224)
-
-
-def my_crop_down_right(image):
-    return crop(image, 32, 32, 224, 224)
-
-
 def build_transform(is_train, args, img_size=224,
                     mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD):
     # TODO: does any other data augmentation work better?
     if is_train:
         t_list = []
+        t_list.append(transforms.Compose(
+            [transforms.Resize(img_size), transforms.RandomCrop(img_size), transforms.ToTensor(),
+             transforms.Normalize(mean, std)]))
 
         def cur_customized_transform(T):
             t_list.append(transforms.Compose(
@@ -246,14 +232,14 @@ def build_transform(is_train, args, img_size=224,
             #     mean=mean, std=std))
         # 增加白噪音
         t_list.append(
-            build_customerised_transform(addPepperNoise.AddPepperNoise(0.9, p=1), img_size=img_size, mean=mean,
+            build_customerised_transform(addPepperNoise.AddPepperNoise(0.9, p=0.5), img_size=img_size, mean=mean,
                                          std=std))
-        # t_list.append(
-        #     build_customerised_transform(transforms.ColorJitter(hue=0.5), img_size=img_size, mean=mean,
-        #                                  std=std))
-        # t_list.append(
-        #     build_customerised_transform(transforms.RandomGrayscale(p=1), img_size=img_size, mean=mean,
-        #                                  std=std))
+        t_list.append(
+            build_customerised_transform(transforms.ColorJitter(hue=0.5), img_size=img_size, mean=mean,
+                                         std=std))
+        t_list.append(
+            build_customerised_transform(transforms.RandomGrayscale(p=1), img_size=img_size, mean=mean,
+                                         std=std))
         return t_list
 
     return build_standard_transform(img_size, mean, std)
