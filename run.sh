@@ -1,4 +1,4 @@
-model_name="pit_b_224"
+model_name="efficientnet_b0"
 python main.py \
     --data-path "/remote-home/share/course23/aicourse_dataset_final/" \
     --model ${model_name} \
@@ -9,3 +9,5 @@ python main.py \
     --rotation 45 \
     --flip 0.5 \
     --add_origin_image \
+
+# pit_b_224
