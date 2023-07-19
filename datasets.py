@@ -214,11 +214,6 @@ def build_transform(is_train, args, img_size=224,
         # cur_customized_transform(transforms.Lambda(my_crop_top_right))
         # cur_customized_transform(transforms.Lambda(my_crop_down_right))
         # cur_customized_transform(transforms.Lambda(my_crop_down_left))
-        t_list.append(transforms.Compose(
-            [transforms.Resize(img_size), transforms.RandomCrop(img_size),
-             transforms.ToTensor(),
-             transforms.Normalize(mean, std)]))
-
         if args.flip and args.rotation:
             # t_list.append(build_customerised_transform(transforms.RandomChoice(
             #     [transforms.RandomVerticalFlip(p=args.flip), transforms.RandomHorizontalFlip(p=args.flip),
@@ -233,12 +228,6 @@ def build_transform(is_train, args, img_size=224,
         # 增加白噪音
         t_list.append(
             build_customerised_transform(addPepperNoise.AddPepperNoise(0.9, p=0.5), img_size=img_size, mean=mean,
-                                         std=std))
-        t_list.append(
-            build_customerised_transform(transforms.ColorJitter(hue=0.5), img_size=img_size, mean=mean,
-                                         std=std))
-        t_list.append(
-            build_customerised_transform(transforms.RandomGrayscale(p=1), img_size=img_size, mean=mean,
                                          std=std))
         return t_list
 
