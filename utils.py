@@ -248,7 +248,7 @@ def init_distributed_mode(args):
 #     self.count = int(t[0])
 #     self.total = t[1]
 
-DEUBG = False
+DEUBG = True
 def MY_DEBUG(str):
     if DEUBG:
         print(str)
