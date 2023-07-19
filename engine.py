@@ -37,6 +37,7 @@ def train_one_epoch(model: torch.nn.Module, criterion: DistillationLoss,
         with torch.cuda.amp.autocast():
             samples = samples.permute(0, 2, 3, 1)
             print(samples.shape)
+            input()
             outputs = model(samples, dataset_ids)
             if class_indicator is not None:
                 mask = class_indicator[targets]
