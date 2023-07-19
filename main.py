@@ -41,6 +41,8 @@ class CustomClassifier(torch.nn.Module):
 
         self.known_data_source = known_data_source
         self.multi_dataset_classes = multi_dataset_classes
+        self.pool = torch.nn.MaxPool2d(7)
+
         self.channel_bn = torch.nn.BatchNorm1d(
             input_dim,
             affine=False,
@@ -51,7 +53,8 @@ class CustomClassifier(torch.nn.Module):
         # TODO: how to leverage dataset_source in training and infernece stage?
         pdtype = img.dtype
         MY_DEBUG("img shape:{}".format(img.shape))
-        feature = self.backbone(img).to(pdtype)
+        feature = self.backbone.forward_features(img)
+        feature = self.pool(feature).reshape(feature.shape[0],feature.shape[1]).to(pdtype)
         # feature = feature.reshape(feature.shape[0], feature.shape[1], -1)
         MY_DEBUG("feature shape:{}".format(feature.shape))
         outputs = self.channel_bn(feature)
