@@ -224,10 +224,14 @@ def build_transform(is_train, args, img_size=224,
         # t_list.append(transforms.Compose(
         #     [transforms.Resize(img_size), transforms.RandomCrop(img_size), transforms.ToTensor(),
         #      transforms.Normalize(mean, std)]))
-        cur_customized_transform(transforms.Lambda(my_crop_top_left))
-        cur_customized_transform(transforms.Lambda(my_crop_top_right))
-        cur_customized_transform(transforms.Lambda(my_crop_down_right))
-        cur_customized_transform(transforms.Lambda(my_crop_down_left))
+        # cur_customized_transform(transforms.Lambda(my_crop_top_left))
+        # cur_customized_transform(transforms.Lambda(my_crop_top_right))
+        # cur_customized_transform(transforms.Lambda(my_crop_down_right))
+        # cur_customized_transform(transforms.Lambda(my_crop_down_left))
+        t_list.append(transforms.Compose(
+            [transforms.Resize(256), transforms.RandomCrop(img_size),
+             transforms.ToTensor(),
+             transforms.Normalize(mean, std)]))
 
         if args.flip and args.rotation:
             # t_list.append(build_customerised_transform(transforms.RandomChoice(
