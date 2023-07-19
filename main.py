@@ -53,11 +53,11 @@ class CustomClassifier(torch.nn.Module):
         MY_DEBUG("img shape:{}".format(img.shape))
         feature = self.backbone.forward_features(img).to(pdtype)
         MY_DEBUG("feature shape:{}".format(feature.shape))
-        outputs = self.channel_bn(feature)
-        MY_DEBUG("outputs shape:{}".format(outputs.shape))
-        outputs = self.layers(outputs)
-        return outputs
-
+        # outputs = self.channel_bn(feature)
+        # MY_DEBUG("outputs shape:{}".format(outputs.shape))
+        # outputs = self.layers(outputs)
+        # return outputs
+        return feature
 
 def get_args_parser():
     parser = argparse.ArgumentParser('DeiT training and evaluation script', add_help=False)
@@ -285,8 +285,7 @@ def main(args):
 
     # model = CustomClassifier(model, model.embed_dim, args.nb_classes, multi_dataset_classes=multi_dataset_classes,
     #                          known_data_source=args.known_data_source)
-    model = CustomClassifier(model, (model.num_features, model.num_features), args.nb_classes,
-                             multi_dataset_classes=multi_dataset_classes,
+    model = CustomClassifier(model, model.num_features, args.nb_classes, multi_dataset_classes=multi_dataset_classes,
                              known_data_source=args.known_data_source)
 
     model.to(device)
