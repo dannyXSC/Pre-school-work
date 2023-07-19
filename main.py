@@ -285,7 +285,8 @@ def main(args):
 
     # model = CustomClassifier(model, model.embed_dim, args.nb_classes, multi_dataset_classes=multi_dataset_classes,
     #                          known_data_source=args.known_data_source)
-    model = CustomClassifier(model, model.num_features, args.nb_classes, multi_dataset_classes=multi_dataset_classes,
+    model = CustomClassifier(model, (model.num_features, model.num_features), args.nb_classes,
+                             multi_dataset_classes=multi_dataset_classes,
                              known_data_source=args.known_data_source)
 
     model.to(device)
