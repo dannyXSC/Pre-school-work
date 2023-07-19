@@ -229,7 +229,7 @@ def build_transform(is_train, args, img_size=224,
         # cur_customized_transform(transforms.Lambda(my_crop_down_right))
         # cur_customized_transform(transforms.Lambda(my_crop_down_left))
         t_list.append(transforms.Compose(
-            [transforms.Resize(256), transforms.RandomCrop(img_size),
+            [transforms.Resize(img_size), transforms.RandomCrop(img_size),
              transforms.ToTensor(),
              transforms.Normalize(mean, std)]))
 
