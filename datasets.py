@@ -133,7 +133,6 @@ class MultiImageFolder_Unlabel(data.Dataset):
         self.samples = []
         for dataset_id, samples in enumerate(samples_list):
             for i, data in enumerate(samples):
-                print(data)
                 img = data
                 self.samples.append((img, None, dataset_id))
 
@@ -143,7 +142,6 @@ class MultiImageFolder_Unlabel(data.Dataset):
         return len(self.samples)
 
     def __getitem__(self, index):
-
         """
         Returns:
             sample: the tensor of the input image
@@ -158,7 +156,8 @@ class MultiImageFolder_Unlabel(data.Dataset):
 
         sample_w, sample_s = self.transform(sample)
 
-        return sample_w, sample_s
+        # return sample_w, sample_s
+        return 0
 
 
 class UnlabelFolder(data.Dataset):
