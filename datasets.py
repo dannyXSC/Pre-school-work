@@ -162,6 +162,7 @@ class UnlabelFolder(data.Dataset):
     def __init__(self, image_root, loader=default_loader):
         self.loader = loader
         self.samples = []
+        self.transform = None
 
         for file_name in os.listdir(image_root):
             self.samples.append(os.path.join(image_root, file_name))
