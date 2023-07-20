@@ -142,6 +142,7 @@ class MultiImageFolder_Unlabel(data.Dataset):
         return len(self.samples)
 
     def __getitem__(self, index):
+        print("123")
         """
         Returns:
             sample: the tensor of the input image
@@ -153,7 +154,7 @@ class MultiImageFolder_Unlabel(data.Dataset):
 
         # if self.transform is not None:
         #     sample = self.transform(sample)
-        print(type(sample))
+
         sample_w, sample_s = self.transform(sample)
 
         return sample_w, sample_s, path
