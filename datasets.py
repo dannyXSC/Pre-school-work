@@ -133,6 +133,7 @@ class MultiImageFolder_Unlabel(data.Dataset):
         self.samples = []
         for dataset_id, samples in enumerate(samples_list):
             for i, data in enumerate(samples):
+                print(data)
                 img = data
                 self.samples.append((img, None, dataset_id))
 
@@ -167,7 +168,6 @@ class UnlabelFolder(data.Dataset):
         self.transform = None
 
         for file_name in os.listdir(image_root):
-            print(file_name)
             self.samples.append(os.path.join(image_root, file_name))
 
     def __len__(self, ):
