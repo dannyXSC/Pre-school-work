@@ -201,25 +201,19 @@ def main(args):
         )
         data_loader_val_list.append(data_loader_val)
 
-    data_loader_unlabel_list = []
-    dataset_unlabel_total = dataset_unlabel
-    for dataset_unlabel in dataset_unlabel.dataset_list:
-        sampler_unlabel = torch.utils.data.RandomSampler(dataset_unlabel)
-        data_loader_unlabel = torch.utils.data.DataLoader(
-            dataset_unlabel,
-            # sampler=sampler_unlabel,
-            # batch_size=args.batch_size,
-            # num_workers=args.num_workers,
-            # pin_memory=args.pin_mem,
-        )
-        print(dataset_unlabel[0])
-        data_loader_unlabel_list.append(data_loader_unlabel)
+    sampler_unlabel = torch.utils.data.RandomSampler(dataset_unlabel)
+    data_loader_unlabel = torch.utils.data.DataLoader(
+        dataset_unlabel,
+        # sampler=sampler_unlabel,
+        # batch_size=args.batch_size,
+        # num_workers=args.num_workers,
+        # pin_memory=args.pin_mem,
+    )
 
-    for dataset_id, data_loader_unlabel in enumerate(data_loader_unlabel_list):
-        metric_logger = utils.MetricLogger(delimiter="  ")
-        header = 'Unlabel:'
-        # for data in metric_logger.log_every(data_loader_unlabel, 10, header):
-        print(data_loader_unlabel[0])
+    for data in data_loader_unlabel:
+        sample_w, sample_s, path = data
+        print(path)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('DeiT training and evaluation script', parents=[get_args_parser()])
