@@ -218,7 +218,8 @@ def main(args):
     for dataset_id, data_loader_unlabel in enumerate(data_loader_unlabel_list):
         metric_logger = utils.MetricLogger(delimiter="  ")
         header = 'Unlabel:'
-        for data in metric_logger.log_every(data_loader_unlabel, 10, header):
+        # for data in metric_logger.log_every(data_loader_unlabel, 10, header):
+        for data in data_loader_unlabel:
             _, _, path = data
             print(path)
 
