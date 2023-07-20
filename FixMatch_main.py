@@ -189,6 +189,9 @@ def main(args):
         num_workers=args.num_workers,
         pin_memory=args.pin_mem,
     )
+    for data in data_loader_train:
+        images, target, dataset_id = data
+        print(target)
 
     data_loader_val_list = []
     dataset_val_total = dataset_val
