@@ -206,10 +206,6 @@ def main(args):
         pin_memory=args.pin_mem,
     )
 
-    for data in data_loader_unlabel:
-        sample_w, sample_s, path = data
-        print(path)
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('DeiT training and evaluation script', parents=[get_args_parser()])
