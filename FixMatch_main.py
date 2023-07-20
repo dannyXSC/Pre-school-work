@@ -188,6 +188,7 @@ def main(args):
         batch_size=args.batch_size,
         num_workers=args.num_workers,
         pin_memory=args.pin_mem,
+        drop_last=False
     )
     for data in data_loader_train:
         images, target, dataset_id = data
