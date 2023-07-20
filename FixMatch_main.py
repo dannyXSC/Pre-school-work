@@ -18,6 +18,7 @@ from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy
 from timm.scheduler import create_scheduler
 from timm.optim import create_optimizer
 from timm.utils import NativeScaler, get_state_dict, ModelEma
+from torch.utils.data import RandomSampler
 
 from datasets import build_dataset, GroupedDataset
 from engine import train_one_epoch, evaluate, test
@@ -180,12 +181,11 @@ def main(args):
     dataset_train, args.nb_classes = build_dataset(is_train=True, args=args)
     dataset_val, *_ = build_dataset(is_train=False, args=args)
 
-    sampler_train = RASampler(
-        dataset_train, num_replicas=1, rank=0, shuffle=True
-    )
     data_loader_train = torch.utils.data.DataLoader(
-        dataset_train,
+        dataset_train, sampler=RandomSampler(dataset_train),
         batch_size=args.batch_size,
+        num_workers=args.num_workers,
+        drop_last=True
     )
     for data in data_loader_train:
         images, target, dataset_id = data
