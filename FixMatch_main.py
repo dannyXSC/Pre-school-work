@@ -188,26 +188,22 @@ def main(args):
         drop_last=True
     )
 
-    data_loader_val_list = []
-    dataset_val_total = dataset_val
-    for dataset_val in dataset_val.dataset_list:
-        sampler_val = torch.utils.data.SequentialSampler(dataset_val)
-        data_loader_val = torch.utils.data.DataLoader(
-            dataset_val, sampler=sampler_val,
-            batch_size=int(2 * args.batch_size),
-            num_workers=args.num_workers,
-            pin_memory=args.pin_mem,
-            drop_last=False
-        )
-        data_loader_val_list.append(data_loader_val)
+    sampler_val = torch.utils.data.SequentialSampler(dataset_val)
+    data_loader_val = torch.utils.data.DataLoader(
+        dataset_val, sampler=sampler_val,
+        batch_size=int(2 * args.batch_size),
+        num_workers=args.num_workers,
+        pin_memory=args.pin_mem,
+        drop_last=False
+    )
 
     sampler_unlabel = torch.utils.data.RandomSampler(dataset_unlabel)
     data_loader_unlabel = torch.utils.data.DataLoader(
         dataset_unlabel,
-        # sampler=sampler_unlabel,
-        # batch_size=args.batch_size,
-        # num_workers=args.num_workers,
-        # pin_memory=args.pin_mem,
+        sampler=sampler_unlabel,
+        batch_size=args.batch_size,
+        num_workers=args.num_workers,
+        pin_memory=args.pin_mem,
     )
 
     for data in data_loader_unlabel:
