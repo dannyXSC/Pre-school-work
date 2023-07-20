@@ -230,7 +230,7 @@ class TestFolder(data.Dataset):
 
 def build_dataset(is_train, args, is_unlabel=False):
     is_test = not is_train and args.test_only
-    transform = build_transform(is_train, args, is_unlabel)
+    transform = build_transform(is_train, args)
 
     dataset_list = []
     nb_classes = 0
