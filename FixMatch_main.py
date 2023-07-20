@@ -212,7 +212,6 @@ def main(args):
             # num_workers=args.num_workers,
             # pin_memory=args.pin_mem,
         )
-        print("123")
         data_loader_unlabel_list.append(data_loader_unlabel)
 
     for dataset_id, data_loader_unlabel in enumerate(data_loader_unlabel_list):
