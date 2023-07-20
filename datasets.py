@@ -139,6 +139,7 @@ class MultiImageFolder_Unlabel(data.Dataset):
         self.transform = TransformFixMatch(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD);
 
     def __len__(self, ):
+        print("123")
         return len(self.samples)
 
     def __getitem__(self, index):
