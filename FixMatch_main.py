@@ -184,8 +184,8 @@ def main(args):
     data_loader_train = torch.utils.data.DataLoader(
         dataset_train, sampler=RandomSampler(dataset_train),
         batch_size=args.batch_size,
-        num_workers=args.num_workers,
-        drop_last=True
+        # num_workers=args.num_workers,
+        # drop_last=True
     )
     for data in data_loader_train:
         images, target, dataset_id = data
