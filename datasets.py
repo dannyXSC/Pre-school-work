@@ -139,11 +139,10 @@ class MultiImageFolder_Unlabel(data.Dataset):
         self.transform = TransformFixMatch(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD);
 
     def __len__(self, ):
-        print("123")
         return len(self.samples)
 
     def __getitem__(self, index):
-        print("get item")
+
         """
         Returns:
             sample: the tensor of the input image
@@ -168,6 +167,7 @@ class UnlabelFolder(data.Dataset):
         self.transform = None
 
         for file_name in os.listdir(image_root):
+            print(file_name)
             self.samples.append(os.path.join(image_root, file_name))
 
     def __len__(self, ):
