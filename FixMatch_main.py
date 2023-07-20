@@ -206,10 +206,11 @@ def main(args):
     for dataset_unlabel in dataset_unlabel.dataset_list:
         sampler_unlabel = torch.utils.data.RandomSampler(dataset_unlabel)
         data_loader_unlabel = torch.utils.data.DataLoader(
-            dataset_unlabel, sampler=sampler_unlabel,
-            batch_size=args.batch_size,
-            num_workers=args.num_workers,
-            pin_memory=args.pin_mem,
+            dataset_unlabel,
+            # sampler=sampler_unlabel,
+            # batch_size=args.batch_size,
+            # num_workers=args.num_workers,
+            # pin_memory=args.pin_mem,
         )
         data_loader_unlabel_list.append(data_loader_unlabel)
 
