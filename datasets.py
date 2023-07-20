@@ -19,6 +19,8 @@ import addPepperNoise
 import utils
 import itertools
 
+from randaugment import fixmatch_augment_pool, RandAugmentMC
+
 
 class MultiImageFolder_AddOrigin(data.Dataset):
     def __init__(self, dataset_list, transform, loader=default_loader,
@@ -119,6 +121,76 @@ class MultiImageFolder(data.Dataset):
         return sample, target, dataset_id
 
 
+class MultiImageFolder_Unlabel(data.Dataset):
+    def __init__(self, dataset_list, loader=default_loader,
+                 known_data_source=True) -> None:
+        super().__init__()
+        self.loader = loader
+
+        samples_list = [x.samples for x in dataset_list]
+        self.dataset_list = dataset_list
+
+        self.samples = []
+        for dataset_id, samples in enumerate(samples_list):
+            for i, data in enumerate(samples):
+                img = data
+                self.samples.append((img, None, dataset_id))
+
+        self.transform = TransformFixMatch(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD);
+
+    def __len__(self, ):
+        return len(self.samples)
+
+    def __getitem__(self, index):
+        """
+        Returns:
+            sample: the tensor of the input image
+            target: a int tensor of class id
+            dataset_id: a int number indicating the dataset id
+        """
+        path, target, dataset_id = self.samples[index]
+        sample = self.loader(path)
+
+        # if self.transform is not None:
+        #     sample = self.transform(sample)
+        sample_w, sample_s = self.transform(sample)
+
+        return sample_w, sample_s, path
+
+
+class UnlabelFolder(data.Dataset):
+    def __init__(self, image_root, loader=default_loader):
+        self.loader = loader
+        self.samples = []
+
+        for file_name in os.listdir(image_root):
+            self.samples.append(os.path.join(image_root, file_name))
+
+    def __len__(self, ):
+        return len(self.samples)
+
+    def get_image_id(self, path):
+        file_name = path.split('/')[-1]
+        id_name = file_name.split('.')[0]
+        return int(id_name)
+
+    def __getitem__(self, index):
+        """
+        Returns:
+            sample: the tensor of the input image
+            image_id: a int number indicating the image id
+        """
+        path = self.samples[index]
+        target = None
+        image_id = self.get_image_id(path)
+        sample = self.loader(path)
+
+        if self.transform is not None:
+            sample = self.transform(sample)
+
+        return sample, image_id
+
+
 class TestFolder(data.Dataset):
     def __init__(self, image_root, transform, loader=default_loader):
         self.transform = transform
@@ -155,14 +227,22 @@ class TestFolder(data.Dataset):
         return sample, image_id
 
 
-def build_dataset(is_train, args):
+def build_dataset(is_train, args, is_unlabel=False):
     is_test = not is_train and args.test_only
-    transform = build_transform(is_train, args)
+    transform = build_transform(is_train, args, is_unlabel)
 
     dataset_list = []
     nb_classes = 0
 
-    if is_test:
+    if is_unlabel:
+        for dataset in args.dataset_list:
+            root = os.path.join(args.data_path, dataset, 'unlabel')
+            dataset = UnlabelFolder(root)
+            dataset_list.append(dataset)
+
+        multi_dataset = MultiImageFolder_Unlabel(dataset_list)
+        return multi_dataset
+    elif is_test:
         for dataset in args.dataset_list:
             root = os.path.join(args.data_path, dataset)
             dataset = TestFolder(root, transform=transform)
@@ -268,6 +348,29 @@ def build_customerised_transform(T, img_size=224,
     t.append(transforms.ToTensor())
     t.append(transforms.Normalize(mean, std))
     return transforms.Compose(t)
+
+
+class TransformFixMatch(object):
+    def __init__(self, mean, std):
+        self.weak = transforms.Compose([
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomCrop(size=224,
+                                  padding=int(224 * 0.125),
+                                  padding_mode='reflect')])
+        self.strong = transforms.Compose([
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomCrop(size=224,
+                                  padding=int(224 * 0.125),
+                                  padding_mode='reflect'),
+            RandAugmentMC(n=2, m=10)])
+        self.normalize = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize(mean=mean, std=std)])
+
+    def __call__(self, x):
+        weak = self.weak(x)
+        strong = self.strong(x)
+        return self.normalize(weak), self.normalize(strong)
 
 
 class GroupedDataset(torch.utils.data.IterableDataset):
