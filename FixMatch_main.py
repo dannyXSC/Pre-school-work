@@ -201,14 +201,6 @@ def main(args):
         )
         data_loader_val_list.append(data_loader_val)
 
-    for dataset_id, data_loader_unlabel in enumerate(data_loader_val_list):
-        metric_logger = utils.MetricLogger(delimiter="  ")
-        header = 'Unlabel:'
-        # for data in metric_logger.log_every(data_loader_unlabel, 10, header):
-        for data in data_loader_unlabel:
-            images, target = data[:2]
-            print(target)
-
     data_loader_unlabel_list = []
     dataset_unlabel_total = dataset_unlabel
     for dataset_unlabel in dataset_unlabel.dataset_list:
