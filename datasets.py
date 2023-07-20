@@ -347,11 +347,13 @@ def build_customerised_transform(T, img_size=224,
 class TransformFixMatch(object):
     def __init__(self, mean, std):
         self.weak = transforms.Compose([
+            transforms.Resize(224),
             transforms.RandomHorizontalFlip(),
             transforms.RandomCrop(size=224,
                                   padding=int(224 * 0.125),
                                   padding_mode='reflect')])
         self.strong = transforms.Compose([
+            transforms.Resize(224),
             transforms.RandomHorizontalFlip(),
             transforms.RandomCrop(size=224,
                                   padding=int(224 * 0.125),
