@@ -18,6 +18,7 @@ from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy
 from timm.scheduler import create_scheduler
 from timm.optim import create_optimizer
 from timm.utils import NativeScaler, get_state_dict, ModelEma
+from torch import optim
 from torch.utils.data import RandomSampler
 
 from datasets import build_dataset, GroupedDataset
@@ -168,7 +169,7 @@ def get_args_parser():
 
 
 def main(args):
-    device = torch.device('cuda')
+    args.device = torch.device(args.device)
 
     # fix the seed for reproducibility
     seed = 0 + utils.get_rank()
@@ -205,6 +206,37 @@ def main(args):
         num_workers=args.num_workers,
         pin_memory=args.pin_mem,
     )
+
+    metric_logger = utils.MetricLogger(delimiter="  ")
+    header = 'Unlabel: '
+    for data in metric_logger.log_every(data_loader_unlabel, 10, header):
+        print(data)
+
+    def create_FixMatch_model(args):
+        import models.wideresnet as models
+        model = models.build_wideresnet(depth=28,
+                                        widen_factor=2,
+                                        dropout=0,
+                                        num_classes=args.nb_classes)
+
+        return model
+
+    model = create_FixMatch_model(args)
+    model.to(args.device)
+
+    no_decay = ['bias', 'bn']
+    grouped_parameters = [
+        {'params': [p for n, p in model.named_parameters() if not any(
+            nd in n for nd in no_decay)], 'weight_decay': args.weight_decay},
+        {'params': [p for n, p in model.named_parameters() if any(
+            nd in n for nd in no_decay)], 'weight_decay': 0.0}
+    ]
+    optimizer = optim.SGD(grouped_parameters, lr=args.lr,
+                          momentum=0.9, nesterov=True)
+    # 这里跟文章不太一样
+    lr_scheduler, _ = create_scheduler(args, optimizer)
+
+
 
 
 if __name__ == '__main__':
