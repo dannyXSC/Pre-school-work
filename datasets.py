@@ -153,8 +153,8 @@ class MultiImageFolder_Unlabel(data.Dataset):
 
         # if self.transform is not None:
         #     sample = self.transform(sample)
+        print(type(sample))
         sample_w, sample_s = self.transform(sample)
-        print(type(sample_w))
 
         return sample_w, sample_s, path
 
