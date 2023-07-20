@@ -184,12 +184,9 @@ def main(args):
     data_loader_train = torch.utils.data.DataLoader(
         dataset_train, sampler=RandomSampler(dataset_train),
         batch_size=args.batch_size,
-        # num_workers=args.num_workers,
-        # drop_last=True
+        num_workers=args.num_workers,
+        drop_last=True
     )
-    for data in data_loader_train:
-        images, target, dataset_id = data
-        print(target)
 
     data_loader_val_list = []
     dataset_val_total = dataset_val
@@ -215,7 +212,7 @@ def main(args):
     data_loader_unlabel_list = []
     dataset_unlabel_total = dataset_unlabel
     for dataset_unlabel in dataset_unlabel.dataset_list:
-        sampler_unlabel = torch.utils.data.SequentialSampler(dataset_unlabel)
+        sampler_unlabel = torch.utils.data.RandomSampler(dataset_unlabel)
         data_loader_unlabel = torch.utils.data.DataLoader(
             dataset_unlabel, sampler=sampler_unlabel,
             batch_size=args.batch_size,
