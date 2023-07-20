@@ -218,10 +218,7 @@ def main(args):
         metric_logger = utils.MetricLogger(delimiter="  ")
         header = 'Unlabel:'
         # for data in metric_logger.log_every(data_loader_unlabel, 10, header):
-        for data in data_loader_unlabel:
-            _, _, path = data
-            print(path)
-
+        print(data_loader_unlabel[0])
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('DeiT training and evaluation script', parents=[get_args_parser()])
