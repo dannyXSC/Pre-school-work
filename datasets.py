@@ -156,7 +156,7 @@ class MultiImageFolder_Unlabel(data.Dataset):
 
         sample_w, sample_s = self.transform(sample)
 
-        return sample_w, sample_s, path
+        return sample_w, sample_s
 
 
 class UnlabelFolder(data.Dataset):

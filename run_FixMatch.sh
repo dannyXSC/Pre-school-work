@@ -9,3 +9,6 @@ python FixMatch_main.py \
     --rotation 45 \
     --flip 0.5 \
     --add_origin_image \
+    --mu 7 \
+    --threshold 0.95 \
+

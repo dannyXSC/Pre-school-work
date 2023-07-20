@@ -2,6 +2,11 @@
 # All rights reserved.
 import argparse
 import datetime
+import logging
+import math
+import os
+import shutil
+
 import numpy as np
 import time
 import torch
@@ -17,12 +22,17 @@ import timm.models
 from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy
 from timm.scheduler import create_scheduler
 from timm.optim import create_optimizer
-from timm.utils import NativeScaler, get_state_dict, ModelEma
+from timm.utils import NativeScaler, get_state_dict, ModelEma, accuracy
 from torch import optim
+from torch.autograd.grad_mode import F
+from torch.optim.lr_scheduler import LambdaLR
 from torch.utils.data import RandomSampler
+from torch.utils.tensorboard import SummaryWriter
+from tqdm import tqdm
 
 from datasets import build_dataset, GroupedDataset
 from engine import train_one_epoch, evaluate, test
+from misc import AverageMeter
 from samplers import RASampler
 
 import models
@@ -30,6 +40,42 @@ import utils
 import random
 
 from utils import MY_DEBUG
+
+logger = logging.getLogger(__name__)
+best_acc = 0
+
+
+def save_checkpoint(state, is_best, checkpoint, filename='checkpoint.pth.tar'):
+    filepath = os.path.join(checkpoint, filename)
+    torch.save(state, filepath)
+    if is_best:
+        shutil.copyfile(filepath, os.path.join(checkpoint,
+                                               'model_best.pth.tar'))
+
+
+def get_cosine_schedule_with_warmup(optimizer,
+                                    num_warmup_steps,
+                                    num_training_steps,
+                                    num_cycles=7. / 16.,
+                                    last_epoch=-1):
+    def _lr_lambda(current_step):
+        if current_step < num_warmup_steps:
+            return float(current_step) / float(max(1, num_warmup_steps))
+        no_progress = float(current_step - num_warmup_steps) / \
+                      float(max(1, num_training_steps - num_warmup_steps))
+        return max(0., math.cos(math.pi * num_cycles * no_progress))
+
+    return LambdaLR(optimizer, _lr_lambda, last_epoch)
+
+
+def interleave(x, size):
+    s = list(x.shape)
+    return x.reshape([-1, size] + s[1:]).transpose(0, 1).reshape([-1] + s[1:])
+
+
+def de_interleave(x, size):
+    s = list(x.shape)
+    return x.reshape([size, -1] + s[1:]).transpose(0, 1).reshape([-1] + s[1:])
 
 
 def get_args_parser():
@@ -42,8 +88,17 @@ def get_args_parser():
                         default=['10shot_cifar100_20200721', '10shot_country211_20210924', '10shot_food_101_20211007',
                                  '10shot_oxford_iiit_pets_20211007', '10shot_stanford_cars_20211007'])
 
+    parser.add_argument('--mu', default=7, type=int,
+                        help='coefficient of unlabeled batch size')
+    parser.add_argument('--threshold', default=0.95, type=float,
+                        help='pseudo label threshold')
+    parser.add_argument('--lambda-u', default=1, type=float,
+                        help='coefficient of unlabeled loss')
+
     parser.add_argument('--batch-size', default=64, type=int)
     parser.add_argument('--epochs', default=50, type=int)
+    parser.add_argument('--eval-step', default=1024, type=int,
+                        help='number of eval steps to run')
     parser.add_argument('--bce-loss', action='store_true')
     parser.add_argument('--unscale-lr', action='store_true')
 
@@ -89,6 +144,8 @@ def get_args_parser():
                         help='learning rate noise std-dev (default: 1.0)')
     parser.add_argument('--warmup-lr', type=float, default=1e-6, metavar='LR',
                         help='warmup learning rate (default: 1e-6)')
+    parser.add_argument('--warmup', default=0, type=float,
+                        help='warmup epochs (unlabeled data based)')
     parser.add_argument('--min-lr', type=float, default=1e-5, metavar='LR',
                         help='lower lr bound for cyclic schedulers that hit 0 (1e-5)')
 
@@ -177,6 +234,9 @@ def main(args):
     np.random.seed(seed)
     random.seed(seed)
 
+    os.makedirs(args.output_dir, exist_ok=True)
+    args.writer = SummaryWriter(args.out)
+
     # args.nb_classes is the sum of number of classes for all datasets
     dataset_unlabel = build_dataset(is_train=False, args=args, is_unlabel=True)
     dataset_train, args.nb_classes = build_dataset(is_train=True, args=args)
@@ -207,11 +267,6 @@ def main(args):
         pin_memory=args.pin_mem,
     )
 
-    metric_logger = utils.MetricLogger(delimiter="  ")
-    header = 'Unlabel: '
-    for data in metric_logger.log_every(data_loader_unlabel, 10, header):
-        print(data)
-
     def create_FixMatch_model(args):
         import models.wideresnet as models
         model = models.build_wideresnet(depth=28,
@@ -233,10 +288,170 @@ def main(args):
     ]
     optimizer = optim.SGD(grouped_parameters, lr=args.lr,
                           momentum=0.9, nesterov=True)
-    # 这里跟文章不太一样
-    lr_scheduler, _ = create_scheduler(args, optimizer)
+    scheduler = get_cosine_schedule_with_warmup(
+        optimizer, args.warmup, args.total_steps)
+    train(args, data_loader_train, data_loader_val, data_loader_unlabel
+          , model, optimizer, scheduler)
 
 
+def train(args, data_loader_train, data_loader_val,
+          data_loader_unlabel, model, optimizer, scheduler):
+    global best_acc
+    print(f"Start training for {args.epochs} epochs")
+    start_time = time.time()
+    test_accs = []
+    max_accuracy = 0.0
+
+    end = time.time()
+
+    iter_train = iter(data_loader_train)
+    iter_unlabel = iter(data_loader_unlabel)
+
+    model.train()
+    for epoch in range(args.start_epoch, args.epochs):
+        batch_time = AverageMeter()
+        data_time = AverageMeter()
+        losses = AverageMeter()
+        losses_x = AverageMeter()
+        losses_u = AverageMeter()
+        mask_probs = AverageMeter()
+        p_bar = tqdm(range(args.eval_step),
+                     disable=args.local_rank not in [-1, 0])
+        for batch_idx in range(args.eval_step):
+            try:
+                inputs_x, targets_x = iter_train.next()
+            except:
+                iter_train = iter(data_loader_train)
+                inputs_x, targets_x, _ = iter_train.next()
+
+            try:
+                inputs_u_w, inputs_u_s = iter_unlabel.next()
+            except:
+                iter_unlabel = iter(data_loader_unlabel)
+                inputs_u_w, inputs_u_s = iter_unlabel.next()
+
+            data_time.update(time.time() - end)
+            batch_size = inputs_x.shape[0]
+            inputs = interleave(
+                torch.cat((inputs_x, inputs_u_w, inputs_u_s)), 2 * args.mu + 1).to(args.device)
+            targets_x = targets_x.to(args.device)
+            logits = model(inputs)
+            logits = de_interleave(logits, 2 * args.mu + 1)
+            logits_x = logits[:batch_size]
+            logits_u_w, logits_u_s = logits[batch_size:].chunk(2)
+            del logits
+
+            Lx = F.cross_entropy(logits_x, targets_x, reduction='mean')
+
+            pseudo_label = torch.softmax(logits_u_w.detach() / args.T, dim=-1)
+            max_probs, targets_u = torch.max(pseudo_label, dim=-1)
+            mask = max_probs.ge(args.threshold).float()
+
+            Lu = (F.cross_entropy(logits_u_s, targets_u,
+                                  reduction='none') * mask).mean()
+
+            loss = Lx + args.lambda_u * Lu
+            loss.backward()
+
+            losses.update(loss.item())
+            losses_x.update(Lx.item())
+            losses_u.update(Lu.item())
+            optimizer.step()
+            scheduler.step()
+
+            model.zero_grad()
+            batch_time.update(time.time() - end)
+            end = time.time()
+            mask_probs.update(mask.mean().item())
+            p_bar.set_description(
+                "Train Epoch: {epoch}/{epochs:4}. Iter: {batch:4}/{iter:4}. LR: {lr:.4f}. Data: {data:.3f}s. Batch: {bt:.3f}s. Loss: {loss:.4f}. Loss_x: {loss_x:.4f}. Loss_u: {loss_u:.4f}. Mask: {mask:.2f}. ".format(
+                    epoch=epoch + 1,
+                    epochs=args.epochs,
+                    batch=batch_idx + 1,
+                    iter=args.eval_step,
+                    lr=scheduler.get_last_lr()[0],
+                    data=data_time.avg,
+                    bt=batch_time.avg,
+                    loss=losses.avg,
+                    loss_x=losses_x.avg,
+                    loss_u=losses_u.avg,
+                    mask=mask_probs.avg))
+            p_bar.update()
+
+        p_bar.close()
+        test_model = model
+
+        test_loss, test_acc = test(args, data_loader_val, test_model, epoch)
+
+        args.writer.add_scalar('train/1.train_loss', losses.avg, epoch)
+        args.writer.add_scalar('train/2.train_loss_x', losses_x.avg, epoch)
+        args.writer.add_scalar('train/3.train_loss_u', losses_u.avg, epoch)
+        args.writer.add_scalar('train/4.mask', mask_probs.avg, epoch)
+        args.writer.add_scalar('test/1.test_acc', test_acc, epoch)
+        args.writer.add_scalar('test/2.test_loss', test_loss, epoch)
+
+        is_best = test_acc > best_acc
+        best_acc = max(test_acc, best_acc)
+
+        model_to_save = model.module if hasattr(model, "module") else model
+        save_checkpoint({
+            'epoch': epoch + 1,
+            'state_dict': model_to_save.state_dict(),
+            'acc': test_acc,
+            'best_acc': best_acc,
+            'optimizer': optimizer.state_dict(),
+            'scheduler': scheduler.state_dict(),
+        }, is_best, args.out)
+
+        test_accs.append(test_acc)
+        logger.info('Best top-1 acc: {:.2f}'.format(best_acc))
+        logger.info('Mean top-1 acc: {:.2f}\n'.format(
+            np.mean(test_accs[-20:])))
+    args.writer.close()
+
+
+def test(args, test_loader, model, epoch):
+    batch_time = AverageMeter()
+    data_time = AverageMeter()
+    losses = AverageMeter()
+    top1 = AverageMeter()
+    top5 = AverageMeter()
+    end = time.time()
+
+    test_loader = tqdm(test_loader)
+
+    with torch.no_grad():
+        for batch_idx, (inputs, targets, _) in enumerate(test_loader):
+            data_time.update(time.time() - end)
+            model.eval()
+
+            inputs = inputs.to(args.device)
+            targets = targets.to(args.device)
+            outputs = model(inputs)
+            loss = F.cross_entropy(outputs, targets)
+
+            prec1, prec5 = accuracy(outputs, targets, topk=(1, 5))
+            losses.update(loss.item(), inputs.shape[0])
+            top1.update(prec1.item(), inputs.shape[0])
+            top5.update(prec5.item(), inputs.shape[0])
+            batch_time.update(time.time() - end)
+            end = time.time()
+
+            test_loader.set_description(
+                "Test Iter: {batch:4}/{iter:4}. Data: {data:.3f}s. Batch: {bt:.3f}s. Loss: {loss:.4f}. top1: {top1:.2f}. top5: {top5:.2f}. ".format(
+                    batch=batch_idx + 1,
+                    iter=len(test_loader),
+                    data=data_time.avg,
+                    bt=batch_time.avg,
+                    loss=losses.avg,
+                    top1=top1.avg,
+                    top5=top5.avg,
+                ))
+        test_loader.close()
+
+    logger.info("top-1 acc: {:.2f}".format(top1.avg))
+    logger.info("top-5 acc: {:.2f}".format(top5.avg))
+    return losses.avg, top1.avg
 
 
 if __name__ == '__main__':
