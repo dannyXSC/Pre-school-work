@@ -265,7 +265,7 @@ def main(args):
     data_loader_unlabel = torch.utils.data.DataLoader(
         dataset_unlabel,
         sampler=sampler_unlabel,
-        batch_size=args.batch_size,
+        batch_size=args.batch_size * args.mu,
         num_workers=args.num_workers,
         pin_memory=args.pin_mem,
     )
