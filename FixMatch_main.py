@@ -88,7 +88,7 @@ def get_args_parser():
     parser.add_argument('--dataset_list', type=str, nargs='+',
                         default=['10shot_cifar100_20200721', '10shot_country211_20210924', '10shot_food_101_20211007',
                                  '10shot_oxford_iiit_pets_20211007', '10shot_stanford_cars_20211007'])
-    
+
     parser.add_argument('--T', default=1, type=float,
                         help='pseudo label temperature')
     parser.add_argument('--mu', default=7, type=int,
@@ -232,6 +232,8 @@ def get_args_parser():
 
 def main(args):
     args.device = torch.device(args.device)
+
+    args.epochs = math.ceil(args.total_steps / args.eval_step)
 
     # fix the seed for reproducibility
     seed = 0 + utils.get_rank()
