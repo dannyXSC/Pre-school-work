@@ -235,7 +235,7 @@ def main(args):
     random.seed(seed)
 
     os.makedirs(args.output_dir, exist_ok=True)
-    args.writer = SummaryWriter(args.out)
+    args.writer = SummaryWriter(args.output_dir)
 
     # args.nb_classes is the sum of number of classes for all datasets
     dataset_unlabel = build_dataset(is_train=False, args=args, is_unlabel=True)
