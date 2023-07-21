@@ -12,5 +12,5 @@ python FixMatch_main.py \
     --mu 2 \
     --threshold 0.95 \
     --eval-step 1024 \
-    --total-steps 10240  \
+    --total-steps 20480  \
 
