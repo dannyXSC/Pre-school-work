@@ -453,7 +453,7 @@ def train(args, data_loader_train, data_loader_val,
             'best_acc': best_acc,
             'optimizer': optimizer.state_dict(),
             'scheduler': scheduler.state_dict(),
-        }, is_best, args.out_dir)
+        }, is_best, args.output_dir)
 
         test_accs.append(test_acc)
         logger.info('Best top-1 acc: {:.2f}'.format(best_acc))
