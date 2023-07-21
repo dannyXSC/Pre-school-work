@@ -9,7 +9,7 @@ python FixMatch_main.py \
     --rotation 45 \
     --flip 0.5 \
     --add_origin_image \
-    --mu 4 \
+    --mu 2 \
     --threshold 0.95 \
     --eval-step 1024 \
 #    --total-steps 2**20  \
