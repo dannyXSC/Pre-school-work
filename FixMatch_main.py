@@ -69,6 +69,7 @@ def get_cosine_schedule_with_warmup(optimizer,
 
 
 def interleave(x, size):
+    print(x.shape)
     s = list(x.shape)
     return x.reshape([-1, size] + s[1:]).transpose(0, 1).reshape([-1] + s[1:])
 
