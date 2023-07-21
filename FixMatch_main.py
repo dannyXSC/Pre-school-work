@@ -317,8 +317,7 @@ def train(args, data_loader_train, data_loader_val,
         losses_x = AverageMeter()
         losses_u = AverageMeter()
         mask_probs = AverageMeter()
-        p_bar = tqdm(range(args.eval_step),
-                     disable=args.local_rank not in [-1, 0])
+        p_bar = tqdm(range(args.eval_step))
         for batch_idx in range(args.eval_step):
             try:
                 inputs_x, targets_x = iter_train.next()
