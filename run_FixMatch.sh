@@ -11,4 +11,6 @@ python FixMatch_main.py \
     --add_origin_image \
     --mu 7 \
     --threshold 0.95 \
+    --eval-step 1024 \
+#    --total-steps 2**20  \
 

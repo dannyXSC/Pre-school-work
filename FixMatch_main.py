@@ -99,6 +99,8 @@ def get_args_parser():
     parser.add_argument('--epochs', default=50, type=int)
     parser.add_argument('--eval-step', default=1024, type=int,
                         help='number of eval steps to run')
+    parser.add_argument('--total-steps', default=2 ** 20, type=int,
+                        help='number of total steps to run')
     parser.add_argument('--bce-loss', action='store_true')
     parser.add_argument('--unscale-lr', action='store_true')
 
