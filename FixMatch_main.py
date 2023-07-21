@@ -24,7 +24,7 @@ from timm.scheduler import create_scheduler
 from timm.optim import create_optimizer
 from timm.utils import NativeScaler, get_state_dict, ModelEma, accuracy
 from torch import optim
-from torch.autograd.grad_mode import F
+import torch.nn.functional as F
 from torch.optim.lr_scheduler import LambdaLR
 from torch.utils.data import RandomSampler
 from torch.utils.tensorboard import SummaryWriter
