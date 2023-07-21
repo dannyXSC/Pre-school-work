@@ -31,7 +31,6 @@ from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
 from datasets import build_dataset, GroupedDataset
-from engine import train_one_epoch, evaluate, test
 from misc import AverageMeter
 from samplers import RASampler
 
@@ -69,7 +68,6 @@ def get_cosine_schedule_with_warmup(optimizer,
 
 
 def interleave(x, size):
-    print(x.shape)
     s = list(x.shape)
     return x.reshape([-1, size] + s[1:]).transpose(0, 1).reshape([-1] + s[1:])
 
@@ -249,6 +247,9 @@ def main(args):
     dataset_train, args.nb_classes = build_dataset(is_train=True, args=args)
     dataset_val, *_ = build_dataset(is_train=False, args=args)
 
+    # number of classes for each dataset
+    multi_dataset_classes = [len(x) for x in dataset_train.classes_list]
+
     data_loader_train = torch.utils.data.DataLoader(
         dataset_train, sampler=RandomSampler(dataset_train),
         batch_size=args.batch_size,
@@ -286,6 +287,9 @@ def main(args):
     model = create_FixMatch_model(args)
     model.to(args.device)
 
+    n_parameters = sum(p.numel() for p in model.parameters())
+    print('number of params:', n_parameters)
+
     no_decay = ['bias', 'bn']
     grouped_parameters = [
         {'params': [p for n, p in model.named_parameters() if not any(
@@ -297,8 +301,50 @@ def main(args):
                           momentum=0.9, nesterov=True)
     scheduler = get_cosine_schedule_with_warmup(
         optimizer, args.warmup, args.total_steps)
+
+    if args.test_only:
+        pred_path = str(args.output_dir) + "/" + "pred_all.json"
+        result_list = {}
+        result_list['n_parameters'] = n_parameters
+        get_predict(data_loader_val, model, args.device, multi_dataset_classes)
+
     train(args, data_loader_train, data_loader_val, data_loader_unlabel
           , model, optimizer, scheduler)
+
+
+@torch.no_grad()
+def get_predict(data_loader, model, device, num_classes_list=None):
+    metric_logger = utils.MetricLogger(delimiter="  ")
+    header = 'Test:'
+
+    # switch to evaluation mode
+    model.eval()
+    result_json = {dataset_name: {} for dataset_name in args.dataset_list}
+
+    class_start_id_list = []
+    start_id = 0
+    for num_classes in num_classes_list:
+        class_start_id_list.append(start_id)
+        start_id += num_classes
+
+    for data in metric_logger.log_every(data_loader, 10, header):
+        images, target, dataset_id = data[:2]
+        images = images.to(device, non_blocking=True)
+        target = target.to(device, non_blocking=True)
+
+        # compute output
+        with torch.cuda.amp.autocast():
+            output = model(images)
+        file_ids = data[-1].tolist()
+
+        output = output[:,
+                 class_start_id_list[dataset_id]:class_start_id_list[dataset_id] + num_classes_list[dataset_id]]
+        pred_labels = output.max(-1)[1].tolist()
+
+        for id, pred_id in zip(file_ids, pred_labels):
+            result_json[args.dataset_list[dataset_id]][id] = pred_id
+
+    return result_json
 
 
 def train(args, data_loader_train, data_loader_val,
@@ -387,7 +433,7 @@ def train(args, data_loader_train, data_loader_val,
         p_bar.close()
         test_model = model
 
-        test_loss, test_acc = test(args, data_loader_val, test_model, epoch)
+        test_loss, test_acc = evaluate(args, data_loader_val, test_model, epoch)
 
         args.writer.add_scalar('train/1.train_loss', losses.avg, epoch)
         args.writer.add_scalar('train/2.train_loss_x', losses_x.avg, epoch)
@@ -407,7 +453,7 @@ def train(args, data_loader_train, data_loader_val,
             'best_acc': best_acc,
             'optimizer': optimizer.state_dict(),
             'scheduler': scheduler.state_dict(),
-        }, is_best, args.out)
+        }, is_best, args.out_dir)
 
         test_accs.append(test_acc)
         logger.info('Best top-1 acc: {:.2f}'.format(best_acc))
@@ -416,7 +462,7 @@ def train(args, data_loader_train, data_loader_val,
     args.writer.close()
 
 
-def test(args, test_loader, model, epoch):
+def evaluate(args, test_loader, model, epoch):
     batch_time = AverageMeter()
     data_time = AverageMeter()
     losses = AverageMeter()
