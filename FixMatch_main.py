@@ -324,7 +324,7 @@ def get_predict(data_loader, model, device, num_classes_list=None):
     model.eval()
     result_json = {dataset_name: {} for dataset_name in args.dataset_list}
 
-    num_classes_list = torch.tensor([int(id) for id in num_classes_list], dtype=torch.int32)
+    print(num_classes_list)
     class_start_id_list = []
     start_id = 0
     for num_classes in num_classes_list:
@@ -342,7 +342,6 @@ def get_predict(data_loader, model, device, num_classes_list=None):
             output = model(images)
         file_ids = dataset_id.tolist()
 
-        print(output.shape, class_start_id_list.shape, num_classes_list.shape, num_classes_list[dataset_id])
         output = output[:,
                  class_start_id_list[dataset_id]:class_start_id_list[dataset_id] + num_classes_list[dataset_id]]
         pred_labels = output.max(-1)[1].tolist()
