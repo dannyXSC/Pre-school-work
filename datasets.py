@@ -113,12 +113,12 @@ class MultiImageFolder(data.Dataset):
             dataset_id: a int number indicating the dataset id
         """
         path, target, dataset_id = self.samples[index]
-        print(path)
         sample = self.loader(path)
 
         if self.transform is not None:
             sample = self.transform(sample)
 
+        print(type(sample),type(target),type(dataset_id))
         return sample, target, dataset_id
 
 
