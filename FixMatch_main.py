@@ -333,17 +333,16 @@ def get_predict(data_loader, model, device, num_classes_list=None):
     cnt = 0
     total_cnt = len(data_loader)
     for batch_idx, (images, target, dataset_id) in enumerate(data_loader):
-        dataset_id = [int(item) for item in dataset_id]
         images = images.to(device, non_blocking=True)
 
         # compute output
         with torch.cuda.amp.autocast():
             output = model(images)
-        file_ids = dataset_id
+        file_ids = dataset_id.tolist()
 
         print(output.shape, (class_start_id_list[dataset_id] + num_classes_list[dataset_id]).shape)
         output = output[:,
-                 class_start_id_list[dataset_id]:class_start_id_list[dataset_id] + num_classes_list[dataset_id]]
+                 class_start_id_list[dataset_id].tolist():(class_start_id_list[dataset_id] + num_classes_list[dataset_id]).tolist()]
         pred_labels = output.max(-1)[1].tolist()
 
         for id, pred_id in zip(file_ids, pred_labels):
