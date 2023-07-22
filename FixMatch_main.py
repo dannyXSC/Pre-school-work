@@ -324,25 +324,27 @@ def get_predict(data_loader, model, device, num_classes_list=None):
     model.eval()
     result_json = {dataset_name: {} for dataset_name in args.dataset_list}
 
+    num_classes_list = torch.tensor([int(id) for id in num_classes_list], dtype=torch.int32)
     class_start_id_list = []
     start_id = 0
     for num_classes in num_classes_list:
         class_start_id_list.append(start_id)
         start_id += num_classes
+    class_start_id_list = torch.tensor(class_start_id_list, dtype=torch.int32)
 
     cnt = 0
     total_cnt = len(data_loader)
     for batch_idx, (images, target, dataset_id) in enumerate(data_loader):
+        dataset_id = dataset_id.tolist()
         images = images.to(device, non_blocking=True)
 
         # compute output
         with torch.cuda.amp.autocast():
             output = model(images)
-        file_ids = dataset_id.tolist()
+        file_ids = dataset_id
 
-        print(output.shape, (class_start_id_list[dataset_id] + num_classes_list[dataset_id]).shape)
         output = output[:,
-                 class_start_id_list[dataset_id].tolist():(class_start_id_list[dataset_id] + num_classes_list[dataset_id]).tolist()]
+                 (class_start_id_list[dataset_id]).tolist():(class_start_id_list[dataset_id] + num_classes_list[dataset_id]).tolist()]
         pred_labels = output.max(-1)[1].tolist()
 
         for id, pred_id in zip(file_ids, pred_labels):
