@@ -266,9 +266,6 @@ def main(args):
         drop_last=False
     )
 
-    for data, _, id in data_loader_val:
-        # print(data)
-        pass
 
     sampler_unlabel = torch.utils.data.RandomSampler(dataset_unlabel)
     data_loader_unlabel = torch.utils.data.DataLoader(
