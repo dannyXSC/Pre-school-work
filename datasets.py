@@ -245,6 +245,7 @@ def build_dataset(is_train, args, is_unlabel=False):
         multi_dataset = MultiImageFolder_Unlabel(dataset_list)
         return multi_dataset
     elif is_test:
+        print(123)
         for dataset in args.dataset_list:
             root = os.path.join(args.data_path, dataset)
             dataset = TestFolder(root, transform=transform)
