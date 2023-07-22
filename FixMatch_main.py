@@ -330,7 +330,9 @@ def get_predict(data_loader, model, device, num_classes_list=None):
         class_start_id_list.append(start_id)
         start_id += num_classes
 
-    for data in metric_logger.log_every(data_loader, 10, header):
+    cnt = 0
+    total_cnt = len(data_loader)
+    for data in data_loader:
         images, target, dataset_id = data[:2]
         images = images.to(device, non_blocking=True)
         target = target.to(device, non_blocking=True)
@@ -346,6 +348,8 @@ def get_predict(data_loader, model, device, num_classes_list=None):
 
         for id, pred_id in zip(file_ids, pred_labels):
             result_json[args.dataset_list[dataset_id]][id] = pred_id
+        print("{} {}".format(cnt, total_cnt))
+        cnt += 1
 
     return result_json
 
