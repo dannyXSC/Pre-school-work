@@ -342,6 +342,7 @@ def get_predict(data_loader, model, device, num_classes_list=None):
             output = model(images)
         file_ids = dataset_id.tolist()
 
+        print(class_start_id_list.shape,num_classes_list.shape)
         output = output[:,
                  class_start_id_list[dataset_id]:class_start_id_list[dataset_id] + num_classes_list[dataset_id]]
         pred_labels = output.max(-1)[1].tolist()
