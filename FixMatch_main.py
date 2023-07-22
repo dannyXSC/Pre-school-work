@@ -324,17 +324,16 @@ def get_predict(data_loader, model, device, num_classes_list=None):
     model.eval()
     result_json = {dataset_name: {} for dataset_name in args.dataset_list}
 
-    num_classes_list = torch.tensor([int(id) for id in num_classes_list], dtype=torch.int32)
     class_start_id_list = []
     start_id = 0
     for num_classes in num_classes_list:
         class_start_id_list.append(start_id)
         start_id += num_classes
-    class_start_id_list = torch.tensor(class_start_id_list, dtype=torch.int32)
 
     cnt = 0
     total_cnt = len(data_loader)
     for batch_idx, (images, target, dataset_id) in enumerate(data_loader):
+        dataset_id = [int(item) for item in dataset_id]
         images = images.to(device, non_blocking=True)
 
         # compute output
