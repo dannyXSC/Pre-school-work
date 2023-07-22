@@ -106,6 +106,7 @@ class MultiImageFolder(data.Dataset):
         return len(self.samples)
 
     def __getitem__(self, index):
+        print(123)
         """
         Returns:
             sample: the tensor of the input image
@@ -245,7 +246,6 @@ def build_dataset(is_train, args, is_unlabel=False):
         multi_dataset = MultiImageFolder_Unlabel(dataset_list)
         return multi_dataset
     elif is_test:
-        print(123)
         for dataset in args.dataset_list:
             root = os.path.join(args.data_path, dataset)
             dataset = TestFolder(root, transform=transform)
