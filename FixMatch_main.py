@@ -332,8 +332,7 @@ def get_predict(data_loader, model, device, num_classes_list=None):
 
     cnt = 0
     total_cnt = len(data_loader)
-    for data in data_loader:
-        images, target, dataset_id = data[:2]
+    for batch_idx, (images, target, dataset_id) in enumerate(test_loader):
         images = images.to(device, non_blocking=True)
         target = target.to(device, non_blocking=True)
 
