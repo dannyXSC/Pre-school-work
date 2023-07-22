@@ -266,7 +266,7 @@ def main(args):
         drop_last=False
     )
 
-    for data in data_loader_val:
+    for data in data_loader_train:
         print(data)
 
     sampler_unlabel = torch.utils.data.RandomSampler(dataset_unlabel)
