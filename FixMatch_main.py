@@ -335,12 +335,11 @@ def get_predict(data_loader, model, device, num_classes_list=None):
     total_cnt = len(data_loader)
     for batch_idx, (images, target, dataset_id) in enumerate(data_loader):
         images = images.to(device, non_blocking=True)
-        target = target.to(device, non_blocking=True)
 
         # compute output
         with torch.cuda.amp.autocast():
             output = model(images)
-        file_ids = data[-1].tolist()
+        file_ids = dataset_id.tolist()
 
         output = output[:,
                  class_start_id_list[dataset_id]:class_start_id_list[dataset_id] + num_classes_list[dataset_id]]
