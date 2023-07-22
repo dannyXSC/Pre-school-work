@@ -329,6 +329,7 @@ def get_predict(data_loader, model, device, num_classes_list=None):
     for num_classes in num_classes_list:
         class_start_id_list.append(start_id)
         start_id += num_classes
+    class_start_id_list = torch.tensor(class_start_id_list)
 
     cnt = 0
     total_cnt = len(data_loader)
