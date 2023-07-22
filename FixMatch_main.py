@@ -306,7 +306,10 @@ def main(args):
         pred_path = str(args.output_dir) + "/" + "pred_all.json"
         result_list = {}
         result_list['n_parameters'] = n_parameters
-        get_predict(data_loader_val, model, args.device, multi_dataset_classes)
+        result_list.update(get_predict(data_loader_val, model, args.device, multi_dataset_classes))
+        with open(pred_path, 'w') as f:
+            json.dump(result_list, f)
+        return
 
     train(args, data_loader_train, data_loader_val, data_loader_unlabel
           , model, optimizer, scheduler)
