@@ -266,7 +266,6 @@ def main(args):
         drop_last=False
     )
 
-
     sampler_unlabel = torch.utils.data.RandomSampler(dataset_unlabel)
     data_loader_unlabel = torch.utils.data.DataLoader(
         dataset_unlabel,
@@ -325,6 +324,7 @@ def get_predict(data_loader, model, device, num_classes_list=None):
     model.eval()
     result_json = {dataset_name: {} for dataset_name in args.dataset_list}
 
+    num_classes_list = [int(id) for id in num_classes_list]
     class_start_id_list = []
     start_id = 0
     for num_classes in num_classes_list:
