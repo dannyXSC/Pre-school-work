@@ -342,7 +342,7 @@ def get_predict(data_loader, model, device, num_classes_list=None):
 
         pred_labels = output.max(-1)[1].tolist()
         # map the concated class_id into original class_id
-        pred_labels = [x - class_start_id_list[dataset_id] for x in pred_labels]
+        pred_labels = [x - class_start_id_list[dataset_id.tolist()] for x in pred_labels]
 
         for id, pred_id in zip(file_ids, pred_labels):
             result_json[args.dataset_list[dataset_id]][id] = pred_id
