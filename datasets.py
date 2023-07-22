@@ -118,7 +118,7 @@ class MultiImageFolder(data.Dataset):
         if self.transform is not None:
             sample = self.transform(sample)
 
-        print(type(sample),type(target),type(dataset_id))
+        # print(type(sample),type(target),type(dataset_id))
         return sample, target, dataset_id
 
 
