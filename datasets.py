@@ -99,7 +99,7 @@ class MultiImageFolder(data.Dataset):
                     samples[i] = (img, target + start_id)
                 else:
                     img = data
-                    self.samples.append((img, None, dataset_id))
+                    self.samples.append((img, 0, dataset_id))
             start_id += len(classes)
 
     def __len__(self, ):
