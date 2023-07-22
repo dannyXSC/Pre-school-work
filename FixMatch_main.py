@@ -346,7 +346,9 @@ def get_predict(data_loader, model, device, num_classes_list=None):
         pred_labels = [x - class_start_id_list[dataset_id.tolist()] for x in pred_labels]
 
         for id, pred_id in zip(file_ids, pred_labels):
-            result_json[args.dataset_list[dataset_id]][id] = pred_id
+            length = len(pred_id)
+            for i in range(length):
+                result_json[args.dataset_list[dataset_id[i]]][id] = pred_id[i]
         print("{} {}".format(cnt, total_cnt))
         cnt += 1
 
