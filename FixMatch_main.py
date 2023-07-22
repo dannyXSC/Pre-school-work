@@ -339,7 +339,7 @@ def get_predict(data_loader, model, device, num_classes_list=None):
         # compute output
         with torch.cuda.amp.autocast():
             output = model(images)
-        file_ids = dataset_id.tolist()
+        file_ids = dataset_id
 
         print(output.shape, (class_start_id_list[dataset_id] + num_classes_list[dataset_id]).shape)
         output = output[:,
