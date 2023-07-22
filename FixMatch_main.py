@@ -266,7 +266,7 @@ def main(args):
         drop_last=False
     )
 
-    for data in data_loader_val:
+    for data, _, id in data_loader_val:
         # print(data)
         pass
 
