@@ -106,7 +106,6 @@ class MultiImageFolder(data.Dataset):
         return len(self.samples)
 
     def __getitem__(self, index):
-        print(123)
         """
         Returns:
             sample: the tensor of the input image
@@ -114,6 +113,7 @@ class MultiImageFolder(data.Dataset):
             dataset_id: a int number indicating the dataset id
         """
         path, target, dataset_id = self.samples[index]
+        print(path)
         sample = self.loader(path)
 
         if self.transform is not None:
