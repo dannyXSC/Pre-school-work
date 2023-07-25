@@ -298,7 +298,7 @@ class TestFolder(data.Dataset):
         sample = self.loader(path)
 
         sample = self.preprocess(sample)
-        print(sample.shape)
+
         return sample, image_id
 
 
@@ -323,6 +323,7 @@ def deal_with_dataset(model, preprocess, device, dataset_path):
 
     for sample, image_id in dataloader:
         image = sample.to(device)
+        print(image.shape)
 
         with torch.no_grad():
             model.encode_image(image)
