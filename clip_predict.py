@@ -331,8 +331,8 @@ def deal_with_dataset(model, preprocess, device, dataset_path):
             probs = logits_per_image.softmax(dim=-1).cpu().numpy()
             pred_labels = probs.argmax(-1).tolist()
 
-        for pred in pred_labels:
-            print(classes_list[pred])
+        for id, pred in zip(image_id, pred_labels):
+            print(id, classes_list[pred])
 
 
 if __name__ == '__main__':
