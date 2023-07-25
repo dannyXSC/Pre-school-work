@@ -315,7 +315,7 @@ def deal_with_dataset(model, preprocess, device, dataset_path):
             classes_list.append(class_name)
 
     dataset = TestFolder(image_root=unlabel_path, preprocess=preprocess)
-    dataloader = torch.utils.data.DataLoader(dataset, sampler=RandomSampler(dataset))
+    dataloader = torch.utils.data.DataLoader(dataset, sampler=RandomSampler(dataset), batch_size=32)
 
     class_text = clip.tokenize(classes_list).to(device)
     with torch.no_grad():
