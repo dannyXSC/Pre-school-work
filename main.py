@@ -18,6 +18,7 @@ from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy
 from timm.scheduler import create_scheduler
 from timm.optim import create_optimizer
 from timm.utils import NativeScaler, get_state_dict, ModelEma
+from torch.utils.data import RandomSampler
 
 from datasets import build_dataset, GroupedDataset
 from engine import train_one_epoch, evaluate, test
@@ -236,6 +237,8 @@ def main(args):
                 dataset_val, num_replicas=num_tasks, rank=global_rank, shuffle=False)
         else:
             sampler_val = torch.utils.data.SequentialSampler(dataset_val)
+    else:
+        sampler_train = RandomSampler(dataset_train)
 
     if args.known_data_source:
         data_loader_train = torch.utils.data.DataLoader(
