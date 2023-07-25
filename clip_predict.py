@@ -279,7 +279,8 @@ class TestFolder(data.Dataset):
         self.preprocess = preprocess
 
         for file_name in os.listdir(image_root):
-            self.samples.append(file_name)
+            if len(file_name) > 0 and file_name[0] != '.':
+                self.samples.append(file_name)
 
     def __len__(self, ):
         return len(self.samples)
@@ -336,10 +337,11 @@ def deal_with_dataset(model, preprocess, device, dataset_path):
 
         for id, pred, file_name in zip(image_id, pred_labels, file_name_list):
             source_path = os.path.join(unlabel_path, file_name)
-            des_path = os.path.join(train_path, classes_list[pred],
+            des_path = os.path.join(train_path, origin_classes_list[pred],
                                     "_{}.{}".format(id, file_name.split('.')[1]))
-            shutil.copyfile(source_path, des_path)
-            print("copy from [{}] to [{}]".format(source_path, des_path))
+            if not os.path.exists(des_path):
+                shutil.copyfile(source_path, des_path)
+            print("{}: copy from [{}] to [{}]".format(os.path.exists(des_path), source_path, des_path))
 
 
 if __name__ == '__main__':
