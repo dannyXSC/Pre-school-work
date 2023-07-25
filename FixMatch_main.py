@@ -314,13 +314,13 @@ def main(args):
                 pin_memory=args.pin_mem,
                 drop_last=False
             )
-            data_loader_test_list.append(data_loader_val)
+            data_loader_test_list.append(data_loader_test)
 
         pred_path = str(args.output_dir) + "/" + "pred_all.json"
         result_list = {}
         result_list['n_parameters'] = n_parameters
-        for dataset_id, data_loader_val in enumerate(data_loader_test_list):
-            pred_json = get_predict(data_loader_val, model, args.device, dataset_id, multi_dataset_classes)
+        for dataset_id, data_loader_test in enumerate(data_loader_test_list):
+            pred_json = get_predict(data_loader_test, model, args.device, dataset_id, multi_dataset_classes)
             result_list[args.dataset_list[dataset_id]] = pred_json
         with open(pred_path, 'w') as f:
             json.dump(result_list, f)
