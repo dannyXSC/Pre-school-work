@@ -297,7 +297,7 @@ class TestFolder(data.Dataset):
         image_id = self.get_image_id(path)
         sample = self.loader(path)
 
-        sample = self.preprocess(sample).unsqueeze(0)
+        sample = self.preprocess(sample)
         print(sample.shape)
         return sample, image_id
 
