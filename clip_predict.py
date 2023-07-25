@@ -332,7 +332,9 @@ def deal_with_dataset(model, preprocess, device, dataset_path):
             pred_labels = probs.argmax(-1).tolist()
 
         for id, pred in zip(image_id, pred_labels):
-            print(id, classes_list[pred])
+            source_path = os.path.join(unlabel_path, "{}".format(id))
+            des_path = os.path.join(dataset_path, "train", classes_list[pred], "_{}".format(id))
+            print(des_path)
 
 
 if __name__ == '__main__':
