@@ -273,11 +273,12 @@ def get_dirs(path):
 class TestFolder(data.Dataset):
     def __init__(self, image_root, preprocess, loader=default_loader):
         self.loader = loader
+        self.image_root = image_root
         self.samples = []
         self.preprocess = preprocess
 
         for file_name in os.listdir(image_root):
-            self.samples.append(os.path.join(image_root, file_name))
+            self.samples.append(file_name)
 
     def __len__(self, ):
         return len(self.samples)
@@ -293,13 +294,14 @@ class TestFolder(data.Dataset):
             sample: the tensor of the input image
             image_id: a int number indicating the image id
         """
-        path = self.samples[index]
+        file_name = self.samples[index]
+        path = os.path.join(self.image_root, file_name)
         image_id = self.get_image_id(path)
         sample = self.loader(path)
 
         sample = self.preprocess(sample)
 
-        return sample, image_id
+        return sample, image_id, file_name
 
 
 # 处理一个dataset
@@ -321,7 +323,7 @@ def deal_with_dataset(model, preprocess, device, dataset_path):
     # with torch.no_grad():
     #     text_features = model.encode_text(class_text)
 
-    for sample, image_id in dataloader:
+    for sample, image_id, file_name_list in dataloader:
         image = sample.to(device)
 
         with torch.no_grad():
@@ -331,10 +333,11 @@ def deal_with_dataset(model, preprocess, device, dataset_path):
             probs = logits_per_image.softmax(dim=-1).cpu().numpy()
             pred_labels = probs.argmax(-1).tolist()
 
-        for id, pred in zip(image_id, pred_labels):
-            source_path = os.path.join(unlabel_path, "{}".format(id))
-            des_path = os.path.join(dataset_path, "train", classes_list[pred], "_{}".format(id))
-            print(des_path)
+        for id, pred, file_name in zip(image_id, pred_labels, file_name_list):
+            source_path = os.path.join(unlabel_path, file_name)
+            des_path = os.path.join(dataset_path, "train", classes_list[pred],
+                                    "_{}.{}".format(id, file_name.split('.')[1]))
+            print(source_path, des_path)
 
 
 if __name__ == '__main__':
