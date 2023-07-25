@@ -315,7 +315,7 @@ def deal_with_dataset(model, preprocess, device, dataset_path):
             classes_list.append(class_name)
 
     dataset = TestFolder(image_root=unlabel_path, preprocess=preprocess)
-    dataloader = torch.utils.data.DataLoader(dataset, sampler=RandomSampler(dataset), batch_size=32)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=32)
 
     class_text = clip.tokenize(classes_list).to(device)
     with torch.no_grad():
@@ -326,9 +326,9 @@ def deal_with_dataset(model, preprocess, device, dataset_path):
         print(image.shape)
 
         with torch.no_grad():
-            model.encode_image(image)
+            image_features = model.encode_image(image)
 
-            logits_per_image, logits_per_text = model(image, text_features)
+            logits_per_image, logits_per_text = model(image_features, text_features)
             probs = logits_per_image.softmax(dim=-1).cpu().numpy()
             pred_labels = probs.max(-1)[1].tolist()
 
