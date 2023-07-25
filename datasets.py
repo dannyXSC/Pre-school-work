@@ -193,9 +193,6 @@ def build_transform(is_train, args, img_size=224,
     # TODO: does any other data augmentation work better?
     if is_train:
         t_list = []
-        t_list.append(transforms.Compose(
-            [transforms.Resize(img_size), transforms.RandomCrop(img_size), transforms.ToTensor(),
-             transforms.Normalize(mean, std)]))
 
         def cur_customized_transform(T):
             t_list.append(transforms.Compose(
@@ -233,12 +230,6 @@ def build_transform(is_train, args, img_size=224,
         # 增加白噪音
         t_list.append(
             build_customerised_transform(addPepperNoise.AddPepperNoise(0.9, p=0.5), img_size=img_size, mean=mean,
-                                         std=std))
-        t_list.append(
-            build_customerised_transform(transforms.ColorJitter(hue=0.5), img_size=img_size, mean=mean,
-                                         std=std))
-        t_list.append(
-            build_customerised_transform(transforms.RandomGrayscale(p=1), img_size=img_size, mean=mean,
                                          std=std))
         return t_list
 
