@@ -337,7 +337,7 @@ def get_predict(data_loader, model, device, dataset_id=None, num_classes_list=No
 
     # switch to evaluation mode
     model.eval()
-    result_json = {dataset_name: {} for dataset_name in args.dataset_list}
+    result_json = {}
 
     class_start_id_list = []
     start_id = 0
