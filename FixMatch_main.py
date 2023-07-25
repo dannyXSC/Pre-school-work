@@ -309,7 +309,7 @@ def main(args):
             sampler_val = torch.utils.data.SequentialSampler(dataset_test)
             data_loader_test = torch.utils.data.DataLoader(
                 dataset_test, sampler=sampler_val,
-                batch_size=int(2 * args.batch_size),
+                batch_size=int(args.batch_size),
                 num_workers=args.num_workers,
                 pin_memory=args.pin_mem,
                 drop_last=False
