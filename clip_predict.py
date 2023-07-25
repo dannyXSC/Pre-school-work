@@ -339,9 +339,10 @@ def deal_with_dataset(model, preprocess, device, dataset_path):
             source_path = os.path.join(unlabel_path, file_name)
             des_path = os.path.join(train_path, origin_classes_list[pred],
                                     "_{}.{}".format(id, file_name.split('.')[1]))
+            print("{}: copy from [{}] to [{}]".format(os.path.exists(des_path), source_path, des_path))
             if not os.path.exists(des_path):
                 shutil.copyfile(source_path, des_path)
-            print("{}: copy from [{}] to [{}]".format(os.path.exists(des_path), source_path, des_path))
+
 
 
 if __name__ == '__main__':
