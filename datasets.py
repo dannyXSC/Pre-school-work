@@ -105,6 +105,11 @@ class MultiImageFolder(data.Dataset):
     def __len__(self, ):
         return len(self.samples)
 
+    def get_image_id(self, path):
+        file_name = path.split('/')[-1]
+        id_name = file_name.split('.')[0]
+        return int(id_name)
+
     def __getitem__(self, index):
         """
         Returns:
@@ -114,6 +119,7 @@ class MultiImageFolder(data.Dataset):
         """
         path, target, dataset_id = self.samples[index]
         sample = self.loader(path)
+        image_id = self.get_image_id(path)
 
         if self.transform is not None:
             sample = self.transform(sample)

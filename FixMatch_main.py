@@ -303,10 +303,25 @@ def main(args):
         optimizer, args.warmup, args.total_steps)
 
     if args.test_only:
+        data_loader_test_list = []
+        dataset_test_total = dataset_val
+        for dataset_test in dataset_val.dataset_list:
+            sampler_val = torch.utils.data.SequentialSampler(dataset_test)
+            data_loader_test = torch.utils.data.DataLoader(
+                dataset_test, sampler=sampler_val,
+                batch_size=int(2 * args.batch_size),
+                num_workers=args.num_workers,
+                pin_memory=args.pin_mem,
+                drop_last=False
+            )
+            data_loader_test_list.append(data_loader_val)
+
         pred_path = str(args.output_dir) + "/" + "pred_all.json"
         result_list = {}
         result_list['n_parameters'] = n_parameters
-        result_list.update(get_predict(data_loader_val, model, args.device, multi_dataset_classes))
+        for dataset_id, data_loader_val in enumerate(data_loader_test_list):
+            pred_json = get_predict(data_loader_val, model, args.device, dataset_id, multi_dataset_classes)
+            result_list[args.dataset_list[dataset_id]] = pred_json
         with open(pred_path, 'w') as f:
             json.dump(result_list, f)
         return
@@ -316,7 +331,7 @@ def main(args):
 
 
 @torch.no_grad()
-def get_predict(data_loader, model, device, num_classes_list=None):
+def get_predict(data_loader, model, device, dataset_id=None, num_classes_list=None):
     metric_logger = utils.MetricLogger(delimiter="  ")
     header = 'Test:'
 
@@ -329,26 +344,23 @@ def get_predict(data_loader, model, device, num_classes_list=None):
     for num_classes in num_classes_list:
         class_start_id_list.append(start_id)
         start_id += num_classes
-    class_start_id_list = torch.tensor(class_start_id_list)
 
     cnt = 0
     total_cnt = len(data_loader)
-    for batch_idx, (images, target, dataset_id) in enumerate(data_loader):
+    for batch_idx, (images, image_id) in enumerate(data_loader):
         images = images.to(device, non_blocking=True)
 
         # compute output
         with torch.cuda.amp.autocast():
             output = model(images)
-        file_ids = dataset_id.tolist()
+        file_ids = image_id.tolist()
 
+        output = output[:,
+                 class_start_id_list[dataset_id]:class_start_id_list[dataset_id] + num_classes_list[dataset_id]]
         pred_labels = output.max(-1)[1].tolist()
-        # map the concated class_id into original class_id
-        pred_labels = [x - class_start_id_list[dataset_id.tolist()] for x in pred_labels]
 
         for id, pred_id in zip(file_ids, pred_labels):
-            length = len(pred_id)
-            for i in range(length):
-                result_json[args.dataset_list[dataset_id[i]]][id] = int(pred_id[i])
+            result_json[id] = pred_id
         print("{} {}".format(cnt, total_cnt))
         cnt += 1
 
