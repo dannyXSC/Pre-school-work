@@ -5,8 +5,8 @@ from torch.utils import data
 from torch.utils.data import RandomSampler
 from torchvision.datasets.folder import default_loader
 
-from CLIP.clip import clip
-# import clip
+# from CLIP.clip import clip
+import clip
 
 from pprint import pprint
 
