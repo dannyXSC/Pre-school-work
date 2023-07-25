@@ -323,13 +323,13 @@ def deal_with_dataset(model, preprocess, device, dataset_path):
 
     for sample, image_id in dataloader:
         image = sample.to(device)
-        print(image.shape)
 
         with torch.no_grad():
             # image_features = model.encode_image(image)
 
             logits_per_image, logits_per_text = model(image, class_text)
             probs = logits_per_image.softmax(dim=-1).cpu().numpy()
+            print(probs)
             pred_labels = probs.max(-1)[1].tolist()
 
         for pred in pred_labels:
