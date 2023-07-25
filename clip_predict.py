@@ -337,8 +337,8 @@ def deal_with_dataset(model, preprocess, device, dataset_path):
             source_path = os.path.join(unlabel_path, file_name)
             des_path = os.path.join(train_path, classes_list[pred],
                                     "_{}.{}".format(id, file_name.split('.')[1]))
-            print(source_path)
-            print(des_path)
+            shutil.copyfile(source_path, des_path)
+            print("copy from [{}] to [{}]".format(source_path, des_path))
 
 
 if __name__ == '__main__':
