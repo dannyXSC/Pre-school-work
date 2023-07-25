@@ -193,44 +193,49 @@ def build_transform(is_train, args, img_size=224,
     # TODO: does any other data augmentation work better?
     if is_train:
         t_list = []
-
-        def cur_customized_transform(T):
-            t_list.append(transforms.Compose(
-                [transforms.Resize(256), T,
-                 transforms.ToTensor(),
-                 transforms.Normalize(mean, std)]))
-            t_list.append(transforms.Compose(
-                [transforms.Resize(256), T, transforms.RandomHorizontalFlip(p=1),
-                 transforms.ToTensor(),
-                 transforms.Normalize(mean, std)]))
-
-        # t_list.append(transforms.Compose(
-        #     [transforms.Resize(img_size), transforms.RandomCrop(img_size), transforms.ToTensor(),
-        #      transforms.Normalize(mean, std)]))
-        # cur_customized_transform(transforms.Lambda(my_crop_top_left))
-        # cur_customized_transform(transforms.Lambda(my_crop_top_right))
-        # cur_customized_transform(transforms.Lambda(my_crop_down_right))
-        # cur_customized_transform(transforms.Lambda(my_crop_down_left))
         t_list.append(transforms.Compose(
-            [transforms.Resize(img_size), transforms.RandomCrop(img_size),
+            [transforms.Resize(img_size), transforms.CenterCrop(img_size),
+             transforms.RandomHorizontalFlip(p=0.5),
+             addPepperNoise.AddPepperNoise(0.9, p=0.5),
              transforms.ToTensor(),
              transforms.Normalize(mean, std)]))
-
-        if args.flip and args.rotation:
-            # t_list.append(build_customerised_transform(transforms.RandomChoice(
-            #     [transforms.RandomVerticalFlip(p=args.flip), transforms.RandomHorizontalFlip(p=args.flip),
-            #      transforms.RandomRotation(args.rotation)]), img_size=img_size, mean=mean, std=std))
-            t_list.append(build_customerised_transform(transforms.RandomHorizontalFlip(p=1)))
-            # t_list.append(
-            #     build_customerised_transform(transforms.RandomAffine(0, translate=(0.5, 0.5)), img_size=img_size, mean=mean,
-            #                                  std=std))
-            # t_list.append(build_customerised_transform(
-            #     transforms.RandomPerspective(distortion_scale=0.5, p=0.5, interpolation=2, fill=0), img_size=img_size,
-            #     mean=mean, std=std))
-        # 增加白噪音
-        t_list.append(
-            build_customerised_transform(addPepperNoise.AddPepperNoise(0.9, p=0.5), img_size=img_size, mean=mean,
-                                         std=std))
+        # def cur_customized_transform(T):
+        #     t_list.append(transforms.Compose(
+        #         [transforms.Resize(256), T,
+        #          transforms.ToTensor(),
+        #          transforms.Normalize(mean, std)]))
+        #     t_list.append(transforms.Compose(
+        #         [transforms.Resize(256), T, transforms.RandomHorizontalFlip(p=1),
+        #          transforms.ToTensor(),
+        #          transforms.Normalize(mean, std)]))
+        #
+        # # t_list.append(transforms.Compose(
+        # #     [transforms.Resize(img_size), transforms.RandomCrop(img_size), transforms.ToTensor(),
+        # #      transforms.Normalize(mean, std)]))
+        # # cur_customized_transform(transforms.Lambda(my_crop_top_left))
+        # # cur_customized_transform(transforms.Lambda(my_crop_top_right))
+        # # cur_customized_transform(transforms.Lambda(my_crop_down_right))
+        # # cur_customized_transform(transforms.Lambda(my_crop_down_left))
+        # t_list.append(transforms.Compose(
+        #     [transforms.Resize(img_size), transforms.RandomCrop(img_size),
+        #      transforms.ToTensor(),
+        #      transforms.Normalize(mean, std)]))
+        #
+        # if args.flip and args.rotation:
+        #     # t_list.append(build_customerised_transform(transforms.RandomChoice(
+        #     #     [transforms.RandomVerticalFlip(p=args.flip), transforms.RandomHorizontalFlip(p=args.flip),
+        #     #      transforms.RandomRotation(args.rotation)]), img_size=img_size, mean=mean, std=std))
+        #     t_list.append(build_customerised_transform(transforms.RandomHorizontalFlip(p=1)))
+        #     # t_list.append(
+        #     #     build_customerised_transform(transforms.RandomAffine(0, translate=(0.5, 0.5)), img_size=img_size, mean=mean,
+        #     #                                  std=std))
+        #     # t_list.append(build_customerised_transform(
+        #     #     transforms.RandomPerspective(distortion_scale=0.5, p=0.5, interpolation=2, fill=0), img_size=img_size,
+        #     #     mean=mean, std=std))
+        # # 增加白噪音
+        # t_list.append(
+        #     build_customerised_transform(addPepperNoise.AddPepperNoise(0.9, p=0.5), img_size=img_size, mean=mean,
+        #                                  std=std))
         return t_list
 
     return build_standard_transform(img_size, mean, std)
