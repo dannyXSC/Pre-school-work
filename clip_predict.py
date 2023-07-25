@@ -318,17 +318,17 @@ def deal_with_dataset(model, preprocess, device, dataset_path):
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=32)
 
     class_text = clip.tokenize(classes_list).to(device)
-    with torch.no_grad():
-        text_features = model.encode_text(class_text)
+    # with torch.no_grad():
+    #     text_features = model.encode_text(class_text)
 
     for sample, image_id in dataloader:
         image = sample.to(device)
         print(image.shape)
 
         with torch.no_grad():
-            image_features = model.encode_image(image)
+            # image_features = model.encode_image(image)
 
-            logits_per_image, logits_per_text = model(image_features, text_features)
+            logits_per_image, logits_per_text = model(image, class_text)
             probs = logits_per_image.softmax(dim=-1).cpu().numpy()
             pred_labels = probs.max(-1)[1].tolist()
 
