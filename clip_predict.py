@@ -266,7 +266,7 @@ UN_LOCODE_Code_list = {
 
 
 def get_dirs(path):
-    return [dir_name for dir_name in os.listdir(path) if os.path.isdir(path, dir_name)]
+    return [dir_name for dir_name in os.listdir(path) if os.path.isdir(os.path.join(path, dir_name))]
 
 
 class TestFolder(data.Dataset):
