@@ -335,9 +335,10 @@ def deal_with_dataset(model, preprocess, device, dataset_path):
 
         for id, pred, file_name in zip(image_id, pred_labels, file_name_list):
             source_path = os.path.join(unlabel_path, file_name)
-            des_path = os.path.join(dataset_path, "train", classes_list[pred],
+            des_path = os.path.join(train_path, classes_list[pred],
                                     "_{}.{}".format(id, file_name.split('.')[1]))
-            print(source_path, des_path)
+            print(source_path)
+            print(des_path)
 
 
 if __name__ == '__main__':
