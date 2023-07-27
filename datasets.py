@@ -26,7 +26,7 @@ class MultiImageFolder_AddOrigin(data.Dataset):
         super().__init__()
         self.loader = loader
         self.transform = transform
-        self.num_transform = len(transform) + 1
+        self.num_transform = len(transform)
 
         samples_list = [x.samples for x in dataset_list]
         classes_list = [x.classes for x in dataset_list]
@@ -65,10 +65,8 @@ class MultiImageFolder_AddOrigin(data.Dataset):
         path, target, dataset_id = self.samples[index]
         sample = self.loader(path)
 
-        if self.transform is not None and type_idx > 0:
-            sample = self.transform[type_idx - 1](sample)
-        else:
-            sample = build_standard_transform()(sample)
+        if self.transform is not None:
+            sample = self.transform[type_idx](sample)
 
         return sample, target, dataset_id
 
@@ -193,12 +191,13 @@ def build_transform(is_train, args, img_size=224,
     # TODO: does any other data augmentation work better?
     if is_train:
         t_list = []
-        t_list.append(transforms.Compose(
-            [transforms.Resize(img_size), transforms.CenterCrop(img_size),
-             transforms.RandomHorizontalFlip(p=0.5),
-             addPepperNoise.AddPepperNoise(0.9, p=0.5),
-             transforms.ToTensor(),
-             transforms.Normalize(mean, std)]))
+        t_list.append(build_standard_transform());
+        # t_list.append(transforms.Compose(
+        #     [transforms.Resize(img_size), transforms.CenterCrop(img_size),
+        #      transforms.RandomHorizontalFlip(p=0.5),
+        #      addPepperNoise.AddPepperNoise(0.9, p=0.5),
+        #      transforms.ToTensor(),
+        #      transforms.Normalize(mean, std)]))
         # def cur_customized_transform(T):
         #     t_list.append(transforms.Compose(
         #         [transforms.Resize(256), T,
