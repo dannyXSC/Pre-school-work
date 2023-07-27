@@ -234,16 +234,21 @@ def build_dataset(is_train, args):
     else:
         for dataset in args.dataset_list:
             root = os.path.join(args.data_path, dataset, 'train' if is_train else 'val')
-            dataset = datasets.ImageFolder(root, transform=transform)
+
+            def test_print(s):
+                print(s)
+                return True
+
+            dataset = datasets.ImageFolder(root, transform=transform, is_valid_file=test_print)
             dataset_list.append(dataset)
             nb_classes += len(dataset.classes)
 
         if is_train:
             multi_dataset = MultiImageFolder_AddOrigin(dataset_list, transform,
                                                        known_data_source=args.known_data_source)
-            dataset_2 = Dataset_Train(args.data_path, transform=transform)
-            for class1, class2 in zip(multi_dataset.classes, dataset_2.classes):
-                print("{} {} {} ".format(class1 == class2, class1, class2))
+            # dataset_2 = Dataset_Train(args.data_path, transform=transform)
+            # for class1, class2 in zip(multi_dataset.classes, dataset_2.classes):
+            #     print("{} {} {} ".format(class1 == class2, class1, class2))
             exit()
         else:
             # val
