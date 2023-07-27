@@ -18,6 +18,69 @@ import torch.utils.data as data
 import addPepperNoise
 import utils
 import itertools
+from utils import get_files, get_dirs
+
+
+class Dataset_Train(data.Dataset):
+    def __init__(self, root_path, transform, loader=default_loader, is_test=False):
+        super().__init__()
+        self.loader = loader
+        if not isinstance(transform, list):
+            transform = [transform]
+        self.transform_list = transform
+        self.num_transform = len(transform)
+
+        self.samples_list = []
+        self.classes_list = []
+        self.classes = []
+        self.samples = []
+
+        start_id = 0
+        for dataset_id, dataset in enumerate(get_dirs(root_path)):
+            dataset_path = os.path.join(root_path, dataset)
+            train_path = os.path.join(dataset_path, 'train')
+            cur_dataset_classes = []
+            cur_dataset_samples = []
+            category_id = 0
+            categories_list = get_dirs(train_path)
+            # 只用一半进行训练
+            categories_list = categories_list[:5]
+            for category in get_dirs(train_path):
+                category_path = os.path.join(train_path, category)
+                self.classes.append(category)
+                cur_dataset_classes.append(category)
+                for img in get_files(category_path):
+                    img_path = os.path.join(category_path, img)
+                    cur_dataset_samples.append(img_path)
+                    # 加入sample
+                    self.samples.append((img_path, category_id + start_id, dataset_id))
+                category_id += 1
+
+            self.classes_list.append(cur_dataset_classes)
+            self.samples_list.append(cur_dataset_samples)
+            start_id += len(cur_dataset_classes)
+
+    def __len__(self):
+        return len(self.samples) * self.num_transform
+
+    def __getitem__(self, index):
+        """
+        Returns:
+            sample: the tensor of the input image
+            target: a int tensor of class id
+            dataset_id: a int number indicating the dataset id
+        """
+        length = len(self.samples)
+        type_idx = index // length
+        index = index % length
+
+        path, target, dataset_id = self.samples[index]
+        sample = self.loader(path)
+
+        if self.transform is not None:
+            sample = self.transform[type_idx](sample)
+
+        return sample, target, dataset_id
 
 
 class MultiImageFolder_AddOrigin(data.Dataset):
@@ -178,6 +241,10 @@ def build_dataset(is_train, args):
         if is_train:
             multi_dataset = MultiImageFolder_AddOrigin(dataset_list, transform,
                                                        known_data_source=args.known_data_source)
+            dataset_2 = Dataset_Train(args.data_path, transform=transform)
+            for class1, class2 in zip(multi_dataset.classes, dataset_2.classes):
+                print("{} {} {} ".format(class1 == class2, class1, class2))
+            exit()
         else:
             # val
             multi_dataset = MultiImageFolder(dataset_list, transform,

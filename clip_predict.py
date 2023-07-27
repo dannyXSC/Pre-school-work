@@ -9,6 +9,7 @@ from torchvision.datasets.folder import default_loader
 # from CLIP.clip import clip
 import clip
 
+from utils import get_files, get_dirs
 from pprint import pprint
 
 base_path = "/home/aicourse_dataset/"
@@ -266,8 +267,8 @@ UN_LOCODE_Code_list = {
 }
 
 templates = {
-    "Food101": ['a photo of {}, a type of food.'],
-    "CIFAR100": [
+    "food": ['a photo of {}, a type of food.'],
+    "cifar": [
         'a photo of a {}.',
         'a blurry photo of a {}.',
         'a black and white photo of a {}.',
@@ -287,17 +288,27 @@ templates = {
         'a photo of the small {}.',
         'a photo of the big {}.',
     ],
+    "pets": [
+        'a photo of a {}, a type of pet.',
+    ],
+    "country": [
+        'a photo i took in {}.',
+        'a photo i took while visiting {}.',
+        'a photo from my home country of {}.',
+        'a photo from my visit to {}.',
+        'a photo showing the country of {}.',
+    ],
+    "cars": [
+        'a photo of a {}.',
+        'a photo of the {}.',
+        'a photo of my {}.',
+        'i love my {}!',
+        'a photo of my dirty {}.',
+        'a photo of my clean {}.',
+        'a photo of my new {}.',
+        'a photo of my old {}.',
+    ]
 }
-
-
-def get_dirs(path):
-    return [dir_name for dir_name in os.listdir(path) if
-            os.path.isdir(os.path.join(path, dir_name)) and dir_name[0] != '.']
-
-
-def get_files(path):
-    return [file_name for file_name in os.listdir(path) if
-            not os.path.isdir(os.path.join(path, file_name)) and file_name[0] != '.']
 
 
 class TestFolder(data.Dataset):

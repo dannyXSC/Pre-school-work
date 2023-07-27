@@ -249,6 +249,18 @@ def init_distributed_mode(args):
 #     self.total = t[1]
 
 DEUBG = False
+
+
 def MY_DEBUG(str):
     if DEUBG:
         print(str)
+
+
+def get_dirs(path):
+    return [dir_name for dir_name in os.listdir(path) if
+            os.path.isdir(os.path.join(path, dir_name)) and dir_name[0] != '.']
+
+
+def get_files(path):
+    return [file_name for file_name in os.listdir(path) if
+            not os.path.isdir(os.path.join(path, file_name)) and file_name[0] != '.']
