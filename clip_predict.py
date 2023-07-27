@@ -357,9 +357,15 @@ def clean_dataset(root_path):
         for category in categories_list:
             category_path = os.path.join(train_path, category)
             imgs_list = get_files(category_path)
+            cnt = 0
             for img in imgs_list:
                 if img[0] == '_':
-                    print(img, category_path)
+                    img_path = os.path.join(category_path, img)
+                    print("Remove: {}".format(img_path))
+                    os.remove(img_path)
+                else:
+                    cnt += 1
+            print("Remain: {} {}".format(cnt, category_path))
 
 
 if __name__ == '__main__':
