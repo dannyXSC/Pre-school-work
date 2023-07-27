@@ -390,7 +390,8 @@ def deal_with_dataset(model, preprocess, device, dataset_path):
     dataset = TestFolder(image_root=unlabel_path, preprocess=preprocess)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=32)
 
-    class_text = tokenize_class(classes_list, templates[dataset_path[dataset_path.rfind("/") + 1:]])
+    print(dataset_path[dataset_path.rfind("/") + 1:])
+    class_text = tokenize_class(model, classes_list, templates[dataset_path[dataset_path.rfind("/") + 1:]])
     # with torch.no_grad():
     #     text_features = model.encode_text(class_text)
 
