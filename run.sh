@@ -9,5 +9,5 @@ python main.py \
     --rotation 45 \
     --flip 0.5 \
     --add_origin_image \
-
+    --split_dataset \
 # pit_b_224

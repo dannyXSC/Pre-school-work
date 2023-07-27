@@ -272,7 +272,7 @@ def get_image_id(path):
     return int(id_name)
 
 
-def is_top_rating_in_dir(img_path, rating):
+def is_top_rating_in_dir(img_path):
     dir_path = img_path[:img_path.rfind('/')]
     file_name = img_path[img_path.rfind('/') + 1:]
 
@@ -281,7 +281,7 @@ def is_top_rating_in_dir(img_path, rating):
     files_in_dir.sort()
     # 数量
     file_number = len(files_in_dir)
-    pick_number = int(file_number * rating)
+    pick_number = int(file_number * 0.5)
     pick_set = {file for file in files_in_dir[:pick_number]}
     result = file_name in pick_set
     print("{} {}".format(result, img_path))

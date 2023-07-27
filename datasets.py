@@ -241,7 +241,10 @@ def build_dataset(is_train, args):
         if is_train:
             for dataset in args.dataset_list:
                 root = os.path.join(args.data_path, dataset, 'train' if is_train else 'val')
-                dataset = datasets.ImageFolder(root, transform=transform, is_valid_file=utils.is_top_rating_in_dir)
+                if args.split_dataset:
+                    dataset = datasets.ImageFolder(root, transform=transform, is_valid_file=utils.is_top_rating_in_dir)
+                else:
+                    dataset = datasets.ImageFolder(root, transform=transform)
                 dataset_list.append(dataset)
                 nb_classes += len(dataset.classes)
             multi_dataset = MultiImageFolder_AddOrigin(dataset_list, transform,

@@ -71,6 +71,9 @@ def get_args_parser():
                         default=['10shot_cifar100_20200721', '10shot_country211_20210924', '10shot_food_101_20211007',
                                  '10shot_oxford_iiit_pets_20211007', '10shot_stanford_cars_20211007'])
 
+    # add
+    parser.add_argument('--split_dataset', action='store_true', default=False)
+
     parser.add_argument('--batch-size', default=64, type=int)
     parser.add_argument('--epochs', default=50, type=int)
     parser.add_argument('--bce-loss', action='store_true')
