@@ -11,7 +11,7 @@ import clip
 
 from pprint import pprint
 
-base_path = "/remote-home/share/course23/aicourse_dataset_final/"
+base_path = "/home/aicourse_dataset/"
 UN_LOCODE_Code_list = {
     "AF": "Afghanistan",
     "AX": "Åland Islands",
