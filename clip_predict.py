@@ -9,6 +9,8 @@ from torchvision.datasets.folder import default_loader
 # from CLIP.clip import clip
 import clip
 
+import utils
+from datasets import build_dataset
 from utils import get_files, get_dirs
 from pprint import pprint
 
@@ -384,6 +386,32 @@ def deal_with_dataset(model, preprocess, device, dataset_path):
                 shutil.copyfile(source_path, des_path)
 
 
+def clip_predict(dataloader, class_text):
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    model, preprocess = clip.load('ViT-B/32', device)
+
+    metric_logger = utils.MetricLogger(delimiter="  ")
+    header = 'Test:'
+
+    # switch to evaluation mode
+    model.eval()
+    result_json = {}
+
+    for data in metric_logger.log_every(dataloader, 10, header):
+        images, target = data[:2]
+        images = images.to(device, non_blocking=True)
+        file_ids = data[-1].tolist()
+
+        with torch.no_grad():
+            logits_per_image, logits_per_text = model(images, class_text)
+            probs = logits_per_image.softmax(dim=-1).cpu().numpy()
+            pred_labels = probs.argmax(-1).tolist()
+
+        for id, pred_id in zip(file_ids, pred_labels):
+            result_json[id] = pred_id
+    return result_json
+
+
 def clean_dataset(root_path):
     datasets_list = get_dirs(root_path)
     for dataset in datasets_list:
@@ -416,8 +444,26 @@ def check_dataset(root_path):
 
 
 if __name__ == '__main__':
-    # clean_dataset(base_path)
-    check_dataset(base_path)
+    args = {}
+    args.test_only = True
+    dataset_val, *_ = build_dataset(is_train=False, args=args)
+
+    data_loader_val_list = []
+    dataset_val_total = dataset_val
+    for dataset_val in dataset_val.dataset_list:
+        sampler_val = torch.utils.data.SequentialSampler(dataset_val)
+
+        data_loader_val = torch.utils.data.DataLoader(
+            dataset_val, sampler=sampler_val,
+            batch_size=int(2 * 32),
+        )
+        data_loader_val_list.append(data_loader_val)
+
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+
+    
+
+
     # device = "cuda" if torch.cuda.is_available() else "cpu"
     # model, preprocess = clip.load('ViT-B/32', device)
     #
