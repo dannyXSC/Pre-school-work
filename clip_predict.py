@@ -460,6 +460,7 @@ def check_dataset(root_path):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('DeiT training and evaluation script')
     args = parser.parse_args()
+    args.data_path = "/home/aicourse_dataset/"
     args.test_only = True
     args.dataset_list = ['10shot_cifar100_20200721', '10shot_country211_20210924', '10shot_food_101_20211007',
                          '10shot_oxford_iiit_pets_20211007', '10shot_stanford_cars_20211007']
