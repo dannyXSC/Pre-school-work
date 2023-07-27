@@ -3,7 +3,7 @@ python main.py \
     --data-path "/home/aicourse_dataset/" \
     --model ${model_name} \
     --batch-size 32 \
-    --epochs 30 \
+    --epochs 50 \
     --weight-decay 0.01 \
     --output_dir output/${model_name} \
     --rotation 45 \
