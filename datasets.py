@@ -232,18 +232,18 @@ def build_dataset(is_train, args):
         multi_dataset = MultiImageFolder(dataset_list, transform, is_test=True)
         return multi_dataset, nb_classes, None
     else:
-        for dataset in args.dataset_list:
-            root = os.path.join(args.data_path, dataset, 'train' if is_train else 'val')
-
-            def test_print(s):
-                print(s)
-                return True
-
-            dataset = datasets.ImageFolder(root, transform=transform, is_valid_file=test_print)
-            dataset_list.append(dataset)
-            nb_classes += len(dataset.classes)
+        # for dataset in args.dataset_list:
+        #     root = os.path.join(args.data_path, dataset, 'train' if is_train else 'val')
+        #     dataset = datasets.ImageFolder(root, transform=transform)
+        #     dataset_list.append(dataset)
+        #     nb_classes += len(dataset.classes)
 
         if is_train:
+            for dataset in args.dataset_list:
+                root = os.path.join(args.data_path, dataset, 'train' if is_train else 'val')
+                dataset = datasets.ImageFolder(root, transform=transform, is_valid_file=utils.is_top_rating_in_dir)
+                dataset_list.append(dataset)
+                nb_classes += len(dataset.classes)
             multi_dataset = MultiImageFolder_AddOrigin(dataset_list, transform,
                                                        known_data_source=args.known_data_source)
             # dataset_2 = Dataset_Train(args.data_path, transform=transform)
@@ -252,6 +252,11 @@ def build_dataset(is_train, args):
             exit()
         else:
             # val
+            for dataset in args.dataset_list:
+                root = os.path.join(args.data_path, dataset, 'train' if is_train else 'val')
+                dataset = datasets.ImageFolder(root, transform=transform)
+                dataset_list.append(dataset)
+                nb_classes += len(dataset.classes)
             multi_dataset = MultiImageFolder(dataset_list, transform,
                                              known_data_source=args.known_data_source)
 

@@ -264,3 +264,25 @@ def get_dirs(path):
 def get_files(path):
     return [file_name for file_name in os.listdir(path) if
             not os.path.isdir(os.path.join(path, file_name)) and file_name[0] != '.']
+
+
+def get_image_id(path):
+    file_name = path.split('/')[-1]
+    id_name = file_name.split('.')[0]
+    return int(id_name)
+
+
+def is_top_rating_in_dir(img_path, rating):
+    dir_path = img_path[:img_path.rfind('/')]
+    file_name = img_path[img_path.rfind('/') + 1:]
+
+    # 获得排序之后的file
+    files_in_dir = get_files(dir_path)
+    files_in_dir.sort()
+    # 数量
+    file_number = len(files_in_dir)
+    pick_number = int(file_number * rating)
+    pick_set = {file for file in files_in_dir[:pick_number]}
+    result = file_name in pick_set
+    print("{} {}".format(result, img_path))
+    return result
