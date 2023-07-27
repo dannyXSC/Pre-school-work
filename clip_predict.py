@@ -473,8 +473,8 @@ if __name__ == '__main__':
     model, preprocess = clip.load('ViT-B/32', device)
     model = model.to(device)
 
-    dataset_train, args.nb_classes = build_dataset(is_train=True, args=args, transform=preprocess)
-    dataset_val, *_ = build_dataset(is_train=False, args=args)
+    dataset_train, args.nb_classes = build_dataset(is_train=True, args=args)
+    dataset_val, *_ = build_dataset(is_train=False, args=args, transform=preprocess)
 
     data_loader_val_list = []
     dataset_val_total = dataset_val
