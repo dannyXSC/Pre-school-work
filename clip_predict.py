@@ -1,3 +1,4 @@
+import argparse
 import json
 import os
 import shutil
@@ -457,10 +458,12 @@ def check_dataset(root_path):
 
 
 if __name__ == '__main__':
-    args = {}
+    parser = argparse.ArgumentParser('DeiT training and evaluation script', parents=[get_args_parser()])
+    args = parser.parse_args()
     args.test_only = True
     args.dataset_list = ['10shot_cifar100_20200721', '10shot_country211_20210924', '10shot_food_101_20211007',
                          '10shot_oxford_iiit_pets_20211007', '10shot_stanford_cars_20211007']
+    print(args)
     dataset_train, args.nb_classes = build_dataset(is_train=True, args=args)
     dataset_val, *_ = build_dataset(is_train=False, args=args)
 
