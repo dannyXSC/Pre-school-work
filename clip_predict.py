@@ -271,8 +271,8 @@ UN_LOCODE_Code_list = {
 }
 
 templates = {
-    "food": ['a photo of {}, a type of food.'],
-    "cifar": [
+    "10shot_food_101_20211007": ['a photo of {}, a type of food.'],
+    "10shot_cifar100_20200721": [
         'a photo of a {}.',
         'a blurry photo of a {}.',
         'a black and white photo of a {}.',
@@ -292,17 +292,17 @@ templates = {
         'a photo of the small {}.',
         'a photo of the big {}.',
     ],
-    "pets": [
+    "10shot_oxford_iiit_pets_20211007": [
         'a photo of a {}, a type of pet.',
     ],
-    "country": [
+    "10shot_country211_20210924": [
         'a photo i took in {}.',
         'a photo i took while visiting {}.',
         'a photo from my home country of {}.',
         'a photo from my visit to {}.',
         'a photo showing the country of {}.',
     ],
-    "cars": [
+    "10shot_stanford_cars_20211007": [
         'a photo of a {}.',
         'a photo of the {}.',
         'a photo of my {}.',
@@ -350,15 +350,29 @@ class TestFolder(data.Dataset):
         return sample, image_id, file_name
 
 
-def tokenize_class(classes):
+def zeroshot_classifier(model, classnames, templates):
+    with torch.no_grad():
+        zeroshot_weights = []
+        for classname in classnames:
+            texts = [template.format(classname) for template in templates]  # format with class
+            texts = clip.tokenize(texts).cuda()  # tokenize
+            class_embeddings = model.encode_text(texts)  # embed with text encoder
+            class_embeddings /= class_embeddings.norm(dim=-1, keepdim=True)
+            class_embedding = class_embeddings.mean(dim=0)
+            class_embedding /= class_embedding.norm()
+            zeroshot_weights.append(class_embedding)
+        zeroshot_weights = torch.stack(zeroshot_weights, dim=1).cuda()
+    return zeroshot_weights
+
+
+def tokenize_class(model, classes, templates):
     classes_list = []
     for class_name in classes:
         if class_name in UN_LOCODE_Code_list:
             classes_list.append(UN_LOCODE_Code_list[class_name])
         else:
             classes_list.append(class_name)
-    class_text = clip.tokenize(classes_list)
-    return class_text
+    return zeroshot_classifier(model=model, classnames=classes_list, templates=templates)
 
 
 # 处理一个dataset
@@ -415,8 +429,11 @@ def clip_predict(model, device, dataloader, class_text):
         file_ids = data[-1].tolist()
 
         with torch.no_grad():
-            logits_per_image, logits_per_text = model(images, class_text)
-            probs = logits_per_image.softmax(dim=-1).cpu().numpy()
+            # logits_per_image, logits_per_text = model(images, class_text)
+            image_features = model.encode_image(images)
+            image_features /= image_features.norm(dim=-1, keepdim=True)
+            logits = image_features @ class_text
+            probs = logits.softmax(dim=-1).cpu().numpy()
             pred_labels = probs.argmax(-1).tolist()
 
         for id, pred_id in zip(file_ids, pred_labels):
@@ -493,7 +510,7 @@ if __name__ == '__main__':
     result_list['n_parameters'] = 74062090
 
     for dataset_id, (data_loader_val, classes) in enumerate(zip(data_loader_val_list, classes_list)):
-        class_text = tokenize_class(classes).to(device)
+        class_text = tokenize_class(model=model, classes=classes, templates=templates[args.dataset_list[dataset_id]])
         pred_json = clip_predict(model=model, dataloader=data_loader_val, device=device, class_text=class_text)
         result_list[args.dataset_list[dataset_id]] = pred_json
     with open(pred_path, 'w') as f:
