@@ -487,12 +487,12 @@ if __name__ == '__main__':
     model = model.to(device)
 
     classes_list = dataset_train.classes_list
-    class_text = tokenize_class(classes_list).to(device)
     pred_path = "./" + "pred_all.json"
     result_list = {}
     result_list['n_parameters'] = 74062090
 
     for dataset_id, (data_loader_val, classes) in enumerate(zip(data_loader_val_list, classes_list)):
+        class_text = tokenize_class(classes).to(device)
         pred_json = clip_predict(model=model, dataloader=data_loader_val, device=device, class_text=class_text)
         result_list[args.dataset_list[dataset_id]] = pred_json
     with open(pred_path, 'w') as f:
