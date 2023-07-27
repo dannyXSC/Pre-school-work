@@ -271,6 +271,11 @@ def get_dirs(path):
             os.path.isdir(os.path.join(path, dir_name)) and dir_name[0] != '.']
 
 
+def get_files(path):
+    return [file_name for file_name in os.listdir(path) if
+            not os.path.isdir(os.path.join(path, file_name)) and file_name[0] != '.']
+
+
 class TestFolder(data.Dataset):
     def __init__(self, image_root, preprocess, loader=default_loader):
         self.loader = loader
@@ -344,13 +349,26 @@ def deal_with_dataset(model, preprocess, device, dataset_path):
                 shutil.copyfile(source_path, des_path)
 
 
+def clean_dataset(root_path):
+    datasets_list = get_dirs(root_path)
+    for dataset in datasets_list:
+        train_path = os.path.join(root_path, dataset, 'train')
+        categories_list = get_dirs(train_path)
+        for category in categories_list:
+            category_path = os.path.join(train_path, category)
+            imgs_list = get_files(category_path)
+            for img in imgs_list:
+                if img[0] == '_':
+                    print(img, category_path)
+
 
 if __name__ == '__main__':
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    model, preprocess = clip.load('ViT-B/32', device)
-
-    dataset_list = get_dirs(base_path)
-    for dataset in dataset_list:
-        dataset_path = os.path.join(base_path, dataset)
-        deal_with_dataset(model=model, preprocess=preprocess,
-                          device=device, dataset_path=dataset_path)
+    clean_dataset(base_path)
+    # device = "cuda" if torch.cuda.is_available() else "cpu"
+    # model, preprocess = clip.load('ViT-B/32', device)
+    #
+    # dataset_list = get_dirs(base_path)
+    # for dataset in dataset_list:
+    #     dataset_path = os.path.join(base_path, dataset)
+    #     deal_with_dataset(model=model, preprocess=preprocess,
+    #                       device=device, dataset_path=dataset_path)
