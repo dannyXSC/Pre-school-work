@@ -1,3 +1,4 @@
+import json
 import os
 import shutil
 
@@ -348,6 +349,17 @@ class TestFolder(data.Dataset):
         return sample, image_id, file_name
 
 
+def tokenize_class(classes):
+    classes_list = []
+    for class_name in classes:
+        if class_name in UN_LOCODE_Code_list:
+            classes_list.append(UN_LOCODE_Code_list[class_name])
+        else:
+            classes_list.append(class_name)
+    class_text = clip.tokenize(classes_list)
+    return class_text
+
+
 # 处理一个dataset
 def deal_with_dataset(model, preprocess, device, dataset_path):
     unlabel_path = os.path.join(dataset_path, "unlabel")
@@ -386,10 +398,7 @@ def deal_with_dataset(model, preprocess, device, dataset_path):
                 shutil.copyfile(source_path, des_path)
 
 
-def clip_predict(dataloader, class_text):
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    model, preprocess = clip.load('ViT-B/32', device)
-
+def clip_predict(model, device, dataloader, class_text):
     metric_logger = utils.MetricLogger(delimiter="  ")
     header = 'Test:'
 
@@ -397,6 +406,8 @@ def clip_predict(dataloader, class_text):
     model.eval()
     result_json = {}
 
+    cnt = 0
+    total_cnt = len(dataloader)
     for data in metric_logger.log_every(dataloader, 10, header):
         images, target = data[:2]
         images = images.to(device, non_blocking=True)
@@ -409,6 +420,8 @@ def clip_predict(dataloader, class_text):
 
         for id, pred_id in zip(file_ids, pred_labels):
             result_json[id] = pred_id
+        print("{} {}".format(cnt, total_cnt))
+        cnt += 1
     return result_json
 
 
@@ -446,6 +459,9 @@ def check_dataset(root_path):
 if __name__ == '__main__':
     args = {}
     args.test_only = True
+    args.dataset_list = ['10shot_cifar100_20200721', '10shot_country211_20210924', '10shot_food_101_20211007',
+                         '10shot_oxford_iiit_pets_20211007', '10shot_stanford_cars_20211007']
+    dataset_train, args.nb_classes = build_dataset(is_train=True, args=args)
     dataset_val, *_ = build_dataset(is_train=False, args=args)
 
     data_loader_val_list = []
@@ -461,14 +477,26 @@ if __name__ == '__main__':
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    
+    model, preprocess = clip.load('ViT-B/32', device)
+    model = model.to(device)
 
+    classes_list = dataset_train.classes_list
+    class_text = tokenize_class(classes_list).to(device)
+    pred_path = "./" + "pred_all.json"
+    result_list = {}
+    result_list['n_parameters'] = 74062090
 
-    # device = "cuda" if torch.cuda.is_available() else "cpu"
-    # model, preprocess = clip.load('ViT-B/32', device)
-    #
-    # dataset_list = get_dirs(base_path)
-    # for dataset in dataset_list:
-    #     dataset_path = os.path.join(base_path, dataset)
-    #     deal_with_dataset(model=model, preprocess=preprocess,
-    #                       device=device, dataset_path=dataset_path)
+    for dataset_id, (data_loader_val, classes) in enumerate(zip(data_loader_val_list, classes_list)):
+        pred_json = clip_predict(model=model, dataloader=data_loader_val, device=device, class_text=class_text)
+        result_list[args.dataset_list[dataset_id]] = pred_json
+    with open(pred_path, 'w') as f:
+        json.dump(result_list, f)
+
+# device = "cuda" if torch.cuda.is_available() else "cpu"
+# model, preprocess = clip.load('ViT-B/32', device)
+#
+# dataset_list = get_dirs(base_path)
+# for dataset in dataset_list:
+#     dataset_path = os.path.join(base_path, dataset)
+#     deal_with_dataset(model=model, preprocess=preprocess,
+#                       device=device, dataset_path=dataset_path)
