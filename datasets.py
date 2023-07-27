@@ -179,7 +179,7 @@ def build_dataset(is_train, args):
             multi_dataset = MultiImageFolder_AddOrigin(dataset_list, transform,
                                                        known_data_source=args.known_data_source)
         else:
-            # eval
+            # val
             multi_dataset = MultiImageFolder(dataset_list, transform,
                                              known_data_source=args.known_data_source)
 
