@@ -390,7 +390,7 @@ def deal_with_dataset(model, preprocess, device, dataset_path):
     dataset = TestFolder(image_root=unlabel_path, preprocess=preprocess)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=32)
 
-    class_text = clip.tokenize(classes_list).to(device)
+    class_text = tokenize_class(classes_list)
     # with torch.no_grad():
     #     text_features = model.encode_text(class_text)
 
@@ -398,10 +398,13 @@ def deal_with_dataset(model, preprocess, device, dataset_path):
         image = sample.to(device)
 
         with torch.no_grad():
-            # image_features = model.encode_image(image)
+            image_features = model.encode_image(image)
+            image_features /= image_features.norm(dim=-1, keepdim=True)
+            logits = image_features @ class_text
+            probs = logits.softmax(dim=-1).cpu().numpy()
 
-            logits_per_image, logits_per_text = model(image, class_text)
-            probs = logits_per_image.softmax(dim=-1).cpu().numpy()
+            # logits_per_image, logits_per_text = model(image, class_text)
+            # probs = logits_per_image.softmax(dim=-1).cpu().numpy()
             pred_labels = probs.argmax(-1).tolist()
 
         for id, pred, file_name in zip(image_id, pred_labels, file_name_list):
@@ -475,52 +478,52 @@ def check_dataset(root_path):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser('DeiT training and evaluation script')
-    args = parser.parse_args()
-    args.split_dataset = False
-    args.data_path = "/home/aicourse_dataset/"
-    args.known_data_source = True
-    args.test_only = True
-    args.dataset_list = ['10shot_cifar100_20200721', '10shot_country211_20210924', '10shot_food_101_20211007',
-                         '10shot_oxford_iiit_pets_20211007', '10shot_stanford_cars_20211007']
-    print(args)
+    # parser = argparse.ArgumentParser('DeiT training and evaluation script')
+    # args = parser.parse_args()
+    # args.split_dataset = False
+    # args.data_path = "/home/aicourse_dataset/"
+    # args.known_data_source = True
+    # args.test_only = True
+    # args.dataset_list = ['10shot_cifar100_20200721', '10shot_country211_20210924', '10shot_food_101_20211007',
+    #                      '10shot_oxford_iiit_pets_20211007', '10shot_stanford_cars_20211007']
+    # print(args)
+    #
+    # device = "cuda" if torch.cuda.is_available() else "cpu"
+    #
+    # model, preprocess = clip.load('ViT-L/14@336px', device)
+    # model = model.to(device)
+    #
+    # dataset_train, args.nb_classes = build_dataset(is_train=True, args=args)
+    # dataset_val, *_ = build_dataset(is_train=False, args=args, transform=preprocess)
+    #
+    # data_loader_val_list = []
+    # dataset_val_total = dataset_val
+    # for dataset_val in dataset_val.dataset_list:
+    #     sampler_val = torch.utils.data.SequentialSampler(dataset_val)
+    #
+    #     data_loader_val = torch.utils.data.DataLoader(
+    #         dataset_val, sampler=sampler_val,
+    #         batch_size=int(2 * 32),
+    #     )
+    #     data_loader_val_list.append(data_loader_val)
+    #
+    # classes_list = dataset_train.classes_list
+    # pred_path = "./" + "pred_all.json"
+    # result_list = {}
+    # result_list['n_parameters'] = 74062090
+    #
+    # for dataset_id, (data_loader_val, classes) in enumerate(zip(data_loader_val_list, classes_list)):
+    #     class_text = tokenize_class(model=model, classes=classes, templates=templates[args.dataset_list[dataset_id]])
+    #     pred_json = clip_predict(model=model, dataloader=data_loader_val, device=device, class_text=class_text)
+    #     result_list[args.dataset_list[dataset_id]] = pred_json
+    # with open(pred_path, 'w') as f:
+    #     json.dump(result_list, f)
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
-
     model, preprocess = clip.load('ViT-L/14@336px', device)
-    model = model.to(device)
 
-    dataset_train, args.nb_classes = build_dataset(is_train=True, args=args)
-    dataset_val, *_ = build_dataset(is_train=False, args=args, transform=preprocess)
-
-    data_loader_val_list = []
-    dataset_val_total = dataset_val
-    for dataset_val in dataset_val.dataset_list:
-        sampler_val = torch.utils.data.SequentialSampler(dataset_val)
-
-        data_loader_val = torch.utils.data.DataLoader(
-            dataset_val, sampler=sampler_val,
-            batch_size=int(2 * 32),
-        )
-        data_loader_val_list.append(data_loader_val)
-
-    classes_list = dataset_train.classes_list
-    pred_path = "./" + "pred_all.json"
-    result_list = {}
-    result_list['n_parameters'] = 74062090
-
-    for dataset_id, (data_loader_val, classes) in enumerate(zip(data_loader_val_list, classes_list)):
-        class_text = tokenize_class(model=model, classes=classes, templates=templates[args.dataset_list[dataset_id]])
-        pred_json = clip_predict(model=model, dataloader=data_loader_val, device=device, class_text=class_text)
-        result_list[args.dataset_list[dataset_id]] = pred_json
-    with open(pred_path, 'w') as f:
-        json.dump(result_list, f)
-
-# device = "cuda" if torch.cuda.is_available() else "cpu"
-# model, preprocess = clip.load('ViT-B/32', device)
-#
-# dataset_list = get_dirs(base_path)
-# for dataset in dataset_list:
-#     dataset_path = os.path.join(base_path, dataset)
-#     deal_with_dataset(model=model, preprocess=preprocess,
-#                       device=device, dataset_path=dataset_path)
+    dataset_list = get_dirs(base_path)
+    for dataset in dataset_list:
+        dataset_path = os.path.join(base_path, dataset)
+        deal_with_dataset(model=model, preprocess=preprocess,
+                          device=device, dataset_path=dataset_path)

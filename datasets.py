@@ -111,6 +111,8 @@ class MultiImageFolder_AddOrigin(data.Dataset):
                     self.samples.append((img, None, dataset_id))
             start_id += len(classes)
 
+
+
     def __len__(self, ):
         return len(self.samples) * self.num_transform
 
