@@ -428,7 +428,7 @@ def main(args):
                     'args': args,
                 }, checkpoint_path)
 
-        if (epoch + 1) % 10 == 0 or epoch + 1 == args.epochs:
+        if (epoch + 1) % 5 == 0 or epoch + 1 == args.epochs:
             test_stats_total = {}
             test_stats_list = []
             for dataset_id, data_loader_val in enumerate(data_loader_val_list):

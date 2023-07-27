@@ -242,7 +242,7 @@ def build_dataset(is_train, args):
             for dataset in args.dataset_list:
                 root = os.path.join(args.data_path, dataset, 'train' if is_train else 'val')
                 if args.split_dataset:
-                    dataset = datasets.ImageFolder(root, transform=transform, is_valid_file=utils.is_top_rating_in_dir)
+                    dataset = datasets.ImageFolder(root, transform=transform, is_valid_file=utils.is_top_half_in_dir)
                 else:
                     dataset = datasets.ImageFolder(root, transform=transform)
                 dataset_list.append(dataset)
@@ -252,12 +252,14 @@ def build_dataset(is_train, args):
             # dataset_2 = Dataset_Train(args.data_path, transform=transform)
             # for class1, class2 in zip(multi_dataset.classes, dataset_2.classes):
             #     print("{} {} {} ".format(class1 == class2, class1, class2))
-            exit()
         else:
             # val
             for dataset in args.dataset_list:
                 root = os.path.join(args.data_path, dataset, 'train' if is_train else 'val')
-                dataset = datasets.ImageFolder(root, transform=transform)
+                if args.split_dataset:
+                    dataset = datasets.ImageFolder(root, transform=transform, is_valid_file=utils.is_down_half_in_dir)
+                else:
+                    dataset = datasets.ImageFolder(root, transform=transform)
                 dataset_list.append(dataset)
                 nb_classes += len(dataset.classes)
             multi_dataset = MultiImageFolder(dataset_list, transform,
