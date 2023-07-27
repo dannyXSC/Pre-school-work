@@ -73,6 +73,7 @@ def get_args_parser():
 
     # add
     parser.add_argument('--split_dataset', action='store_true', default=False)
+    parser.add_argument('--epoch_per_print', default=10, type=int)
 
     parser.add_argument('--batch-size', default=64, type=int)
     parser.add_argument('--epochs', default=50, type=int)
@@ -428,7 +429,7 @@ def main(args):
                     'args': args,
                 }, checkpoint_path)
 
-        if (epoch + 1) % 3 == 0 or epoch + 1 == args.epochs:
+        if (epoch + 1) % args.epoch_per_print == 0 or epoch + 1 == args.epochs:
             test_stats_total = {}
             test_stats_list = []
             for dataset_id, data_loader_val in enumerate(data_loader_val_list):
