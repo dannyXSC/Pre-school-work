@@ -487,7 +487,7 @@ if __name__ == '__main__':
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    model, preprocess = clip.load('ViT-B/32', device)
+    model, preprocess = clip.load('ViT-L/14@336px', device)
     model = model.to(device)
 
     dataset_train, args.nb_classes = build_dataset(is_train=True, args=args)
