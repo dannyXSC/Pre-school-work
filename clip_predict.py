@@ -368,8 +368,21 @@ def clean_dataset(root_path):
             print("Remain: {} {}".format(cnt, category_path))
 
 
+def check_dataset(root_path):
+    # 看看每个category里是不是还有10个文件
+    datasets_list = get_dirs(root_path)
+    for dataset in datasets_list:
+        train_path = os.path.join(root_path, dataset, 'train')
+        categories_list = get_dirs(train_path)
+        for category in categories_list:
+            category_path = os.path.join(train_path, category)
+            imgs_list = get_files(category_path)
+            print("{} {}".format(len(imgs_list), category_path))
+
+
 if __name__ == '__main__':
-    clean_dataset(base_path)
+    # clean_dataset(base_path)
+    check_dataset(base_path)
     # device = "cuda" if torch.cuda.is_available() else "cpu"
     # model, preprocess = clip.load('ViT-B/32', device)
     #
