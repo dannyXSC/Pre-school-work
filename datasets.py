@@ -216,9 +216,10 @@ class TestFolder(data.Dataset):
         return sample, image_id
 
 
-def build_dataset(is_train, args):
+def build_dataset(is_train, args, transform=None):
     is_test = not is_train and args.test_only
-    transform = build_transform(is_train, args)
+    if transform is None:
+        transform = build_transform(is_train, args)
 
     dataset_list = []
     nb_classes = 0

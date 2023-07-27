@@ -467,7 +467,13 @@ if __name__ == '__main__':
     args.dataset_list = ['10shot_cifar100_20200721', '10shot_country211_20210924', '10shot_food_101_20211007',
                          '10shot_oxford_iiit_pets_20211007', '10shot_stanford_cars_20211007']
     print(args)
-    dataset_train, args.nb_classes = build_dataset(is_train=True, args=args)
+
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+
+    model, preprocess = clip.load('ViT-B/32', device)
+    model = model.to(device)
+
+    dataset_train, args.nb_classes = build_dataset(is_train=True, args=args, transform=preprocess)
     dataset_val, *_ = build_dataset(is_train=False, args=args)
 
     data_loader_val_list = []
@@ -480,11 +486,6 @@ if __name__ == '__main__':
             batch_size=int(2 * 32),
         )
         data_loader_val_list.append(data_loader_val)
-
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-
-    model, preprocess = clip.load('ViT-B/32', device)
-    model = model.to(device)
 
     classes_list = dataset_train.classes_list
     pred_path = "./" + "pred_all.json"
