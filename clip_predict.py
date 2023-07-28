@@ -475,7 +475,8 @@ def check_dataset(root_path):
         for category in categories_list:
             category_path = os.path.join(train_path, category)
             imgs_list = get_files(category_path)
-            print("{} {}".format(len(imgs_list), category_path))
+            if len(imgs_list)==10:
+                print("{} {}".format(len(imgs_list), category_path))
 
 
 if __name__ == '__main__':
@@ -520,11 +521,13 @@ if __name__ == '__main__':
     # with open(pred_path, 'w') as f:
     #     json.dump(result_list, f)
 
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    model, preprocess = clip.load('ViT-L/14@336px', device)
+    # device = "cuda" if torch.cuda.is_available() else "cpu"
+    # model, preprocess = clip.load('ViT-L/14@336px', device)
+    #
+    # dataset_list = get_dirs(base_path)
+    # for dataset in dataset_list:
+    #     dataset_path = os.path.join(base_path, dataset)
+    #     deal_with_dataset(model=model, preprocess=preprocess,
+    #                       device=device, dataset_path=dataset_path)
 
-    dataset_list = get_dirs(base_path)
-    for dataset in dataset_list:
-        dataset_path = os.path.join(base_path, dataset)
-        deal_with_dataset(model=model, preprocess=preprocess,
-                          device=device, dataset_path=dataset_path)
+    check_dataset(base_path)
