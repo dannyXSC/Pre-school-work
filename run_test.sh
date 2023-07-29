@@ -1,4 +1,4 @@
-model_name="pit_b_224"
+model_name="cait_xxs36_224"
 python main.py \
     --data-path "/home/aicourse_dataset/" \
     --model ${model_name} \
