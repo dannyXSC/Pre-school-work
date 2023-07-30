@@ -276,13 +276,12 @@ def build_transform(is_train, args, img_size=224,
     # TODO: does any other data augmentation work better?
     if is_train:
         t_list = []
-        t_list.append(build_standard_transform());
-        # t_list.append(transforms.Compose(
-        #     [transforms.Resize(img_size), transforms.CenterCrop(img_size),
-        #      transforms.RandomHorizontalFlip(p=0.5),
-        #      addPepperNoise.AddPepperNoise(0.9, p=0.5),
-        #      transforms.ToTensor(),
-        #      transforms.Normalize(mean, std)]))
+        # t_list.append(build_standard_transform())
+        t_list.append(transforms.Compose(
+            [transforms.Resize(img_size), transforms.CenterCrop(img_size),
+             transforms.RandomHorizontalFlip(p=0.5),
+             transforms.ToTensor(),
+             transforms.Normalize(mean, std)]))
         # def cur_customized_transform(T):
         #     t_list.append(transforms.Compose(
         #         [transforms.Resize(256), T,
