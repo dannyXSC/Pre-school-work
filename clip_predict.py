@@ -8,8 +8,8 @@ from torch.utils import data
 from torch.utils.data import RandomSampler
 from torchvision.datasets.folder import default_loader
 
-from CLIP.clip import clip
-# import clip
+# from CLIP.clip import clip
+import clip
 
 import utils
 from datasets import build_dataset
@@ -491,56 +491,56 @@ def check_dataset(root_path):
 
 
 if __name__ == '__main__':
-    # parser = argparse.ArgumentParser('DeiT training and evaluation script')
-    # args = parser.parse_args()
-    # args.split_dataset = False
-    # args.data_path = "/home/aicourse_dataset/"
-    # args.known_data_source = True
-    # args.test_only = True
-    # args.dataset_list = ['10shot_cifar100_20200721', '10shot_country211_20210924', '10shot_food_101_20211007',
-    #                      '10shot_oxford_iiit_pets_20211007', '10shot_stanford_cars_20211007']
-    # print(args)
-    #
-    # device = "cuda" if torch.cuda.is_available() else "cpu"
-    #
-    # model, preprocess = clip.load('ViT-L/14@336px', device)
-    # model = model.to(device)
-    #
-    # dataset_train, args.nb_classes = build_dataset(is_train=True, args=args)
-    # dataset_val, *_ = build_dataset(is_train=False, args=args, transform=preprocess)
-    #
-    # data_loader_val_list = []
-    # dataset_val_total = dataset_val
-    # for dataset_val in dataset_val.dataset_list:
-    #     sampler_val = torch.utils.data.SequentialSampler(dataset_val)
-    #
-    #     data_loader_val = torch.utils.data.DataLoader(
-    #         dataset_val, sampler=sampler_val,
-    #         batch_size=int(2 * 32),
-    #     )
-    #     data_loader_val_list.append(data_loader_val)
-    #
-    # classes_list = dataset_train.classes_list
-    # pred_path = "./" + "pred_all.json"
-    # result_list = {}
-    # result_list['n_parameters'] = 74062090
-    #
-    # for dataset_id, (data_loader_val, classes) in enumerate(zip(data_loader_val_list, classes_list)):
-    #     class_text = tokenize_class(model=model, classes=classes, templates=templates[args.dataset_list[dataset_id]])
-    #     pred_json = clip_predict(model=model, dataloader=data_loader_val, device=device, class_text=class_text)
-    #     result_list[args.dataset_list[dataset_id]] = pred_json
-    # with open(pred_path, 'w') as f:
-    #     json.dump(result_list, f)
-
+    parser = argparse.ArgumentParser('DeiT training and evaluation script')
+    args = parser.parse_args()
+    args.split_dataset = False
+    args.data_path = "/home/aicourse_dataset/"
+    args.known_data_source = True
+    args.test_only = True
+    args.dataset_list = ['10shot_cifar100_20200721', '10shot_country211_20210924', '10shot_food_101_20211007',
+                         '10shot_oxford_iiit_pets_20211007', '10shot_stanford_cars_20211007']
+    print(args)
+    
     device = "cuda" if torch.cuda.is_available() else "cpu"
+    
     model, preprocess = clip.load('ViT-L/14@336px', device)
+    model = model.to(device)
+    
+    dataset_train, args.nb_classes = build_dataset(is_train=True, args=args)
+    dataset_val, *_ = build_dataset(is_train=False, args=args, transform=preprocess)
+    
+    data_loader_val_list = []
+    dataset_val_total = dataset_val
+    for dataset_val in dataset_val.dataset_list:
+        sampler_val = torch.utils.data.SequentialSampler(dataset_val)
 
-    dataset_list = get_dirs(base_path)
-    for dataset in dataset_list:
-        dataset_path = os.path.join(base_path, dataset)
-        deal_with_dataset(model=model, preprocess=preprocess,
-                          device=device, dataset_path=dataset_path)
+        data_loader_val = torch.utils.data.DataLoader(
+            dataset_val, sampler=sampler_val,
+            batch_size=int(2 * 32),
+        )
+        data_loader_val_list.append(data_loader_val)
+    
+    classes_list = dataset_train.classes_list
+    pred_path = "./" + "pred_all.json"
+    result_list = {}
+    result_list['n_parameters'] = 74062090
+    
+    for dataset_id, (data_loader_val, classes) in enumerate(zip(data_loader_val_list, classes_list)):
+        class_text = tokenize_class(model=model, classes=classes, templates=templates[args.dataset_list[dataset_id]])
+        pred_json = clip_predict(model=model, dataloader=data_loader_val, device=device, class_text=class_text)
+        result_list[args.dataset_list[dataset_id]] = pred_json
+    with open(pred_path, 'w') as f:
+        json.dump(result_list, f)
+
+#    device = "cuda" if torch.cuda.is_available() else "cpu"
+#    model, preprocess = clip.load('ViT-L/14@336px', device)
+
+#    dataset_list = get_dirs(base_path)
+#    for dataset in dataset_list:
+#        dataset_path = os.path.join(base_path, dataset)
+#        deal_with_dataset(model=model, preprocess=preprocess,
+#                          device=device, dataset_path=dataset_path)
 
     # check_dataset(base_path)
-    for class_name in get_dirs("/Users/xiesicheng/Desktop/media/aicourse/10shot_cifar100_20200721/train"):
-        prepare_for_cifar100(class_name)
+ #   for class_name in get_dirs("/Users/xiesicheng/Desktop/media/aicourse/10shot_cifar100_20200721/train"):
+  #      prepare_for_cifar100(class_name)
