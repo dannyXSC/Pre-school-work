@@ -1,8 +1,10 @@
 import argparse
 import json
 import os
+import random
 import shutil
 
+import numpy as np
 import torch
 from torch.utils import data
 from torch.utils.data import RandomSampler
@@ -491,6 +493,11 @@ def check_dataset(root_path):
 
 
 if __name__ == '__main__':
+    seed = 0
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+
     parser = argparse.ArgumentParser('DeiT training and evaluation script')
     args = parser.parse_args()
     args.split_dataset = False
@@ -500,15 +507,15 @@ if __name__ == '__main__':
     args.dataset_list = ['10shot_cifar100_20200721', '10shot_country211_20210924', '10shot_food_101_20211007',
                          '10shot_oxford_iiit_pets_20211007', '10shot_stanford_cars_20211007']
     print(args)
-    
+
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    
-    model, preprocess = clip.load('ViT-L/14@336px', device)
+
+    model, preprocess = clip.load('ViT-L/14', device)
     model = model.to(device)
-    
+
     dataset_train, args.nb_classes = build_dataset(is_train=True, args=args)
     dataset_val, *_ = build_dataset(is_train=False, args=args, transform=preprocess)
-    
+
     data_loader_val_list = []
     dataset_val_total = dataset_val
     for dataset_val in dataset_val.dataset_list:
@@ -519,14 +526,15 @@ if __name__ == '__main__':
             batch_size=int(2 * 32),
         )
         data_loader_val_list.append(data_loader_val)
-    
+
     classes_list = dataset_train.classes_list
     pred_path = "./" + "pred_all.json"
     result_list = {}
     result_list['n_parameters'] = 74062090
-    
+
     for dataset_id, (data_loader_val, classes) in enumerate(zip(data_loader_val_list, classes_list)):
-        class_text = tokenize_class(model=model, classes=classes, templates=templates[args.dataset_list[dataset_id]])
+        class_text = tokenize_class(model=model, classes=classes, templates=templates[args.dataset_list[dataset_id]],
+                                    dataset_name=args.dataset_list[dataset_id])
         pred_json = clip_predict(model=model, dataloader=data_loader_val, device=device, class_text=class_text)
         result_list[args.dataset_list[dataset_id]] = pred_json
     with open(pred_path, 'w') as f:
@@ -541,6 +549,6 @@ if __name__ == '__main__':
 #        deal_with_dataset(model=model, preprocess=preprocess,
 #                          device=device, dataset_path=dataset_path)
 
-    # check_dataset(base_path)
- #   for class_name in get_dirs("/Users/xiesicheng/Desktop/media/aicourse/10shot_cifar100_20200721/train"):
-  #      prepare_for_cifar100(class_name)
+# check_dataset(base_path)
+#   for class_name in get_dirs("/Users/xiesicheng/Desktop/media/aicourse/10shot_cifar100_20200721/train"):
+#      prepare_for_cifar100(class_name)
