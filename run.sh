@@ -12,3 +12,5 @@ python main.py \
     --epoch_per_print 10 \
 #    --split_dataset \
 # pit_b_224
+# set1 cifar100
+# set2 country211

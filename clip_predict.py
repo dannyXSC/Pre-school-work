@@ -8,8 +8,8 @@ from torch.utils import data
 from torch.utils.data import RandomSampler
 from torchvision.datasets.folder import default_loader
 
-# from CLIP.clip import clip
-import clip
+from CLIP.clip import clip
+# import clip
 
 import utils
 from datasets import build_dataset
@@ -314,6 +314,12 @@ templates = {
     ]
 }
 
+CIFAR100_SUPERCLASS = {"aquatic mammals", "fish", "flowers", "food containers", "fruit and vegetables",
+                       "household electrical devices", "household furniture", "insects", "large carnivores",
+                       "large man-made outdoor things", "large natural outdoor scenes",
+                       "large omnivores and herbivores", "medium mammals", "non-insect invertebrates", "people",
+                       "reptiles", "small mammals", "trees", "vehicles 1", "vehicles 2"}
+
 
 class TestFolder(data.Dataset):
     def __init__(self, image_root, preprocess, loader=default_loader):
@@ -365,11 +371,23 @@ def zeroshot_classifier(model, classnames, templates):
     return zeroshot_weights
 
 
-def tokenize_class(model, classes, templates):
+def prepare_for_cifar100(class_name: str):
+    class_name = class_name.replace('_', ' ')
+    super_class_name = ""
+    for super_class in CIFAR100_SUPERCLASS:
+        if class_name.find(super_class) != -1:
+            super_class_name = super_class
+    result = "{}, a type of {}".format(class_name.split(super_class_name)[1], super_class_name)
+    return result
+
+
+def tokenize_class(model, classes, templates, dataset_name=None):
     classes_list = []
     for class_name in classes:
         if class_name in UN_LOCODE_Code_list:
             classes_list.append(UN_LOCODE_Code_list[class_name])
+        elif dataset_name is not None and dataset_name == "10shot_cifar100_20200721":
+            classes_list.append(prepare_for_cifar100(class_name))
         else:
             classes_list.append(class_name)
     return zeroshot_classifier(model=model, classnames=classes_list, templates=templates)
@@ -380,20 +398,13 @@ def deal_with_dataset(model, preprocess, device, dataset_path):
     unlabel_path = os.path.join(dataset_path, "unlabel")
     train_path = os.path.join(dataset_path, "train")
     origin_classes_list = get_dirs(train_path)
-    classes_list = []
-    for class_name in origin_classes_list:
-        if class_name in UN_LOCODE_Code_list:
-            classes_list.append(UN_LOCODE_Code_list[class_name])
-        else:
-            classes_list.append(class_name)
 
     dataset = TestFolder(image_root=unlabel_path, preprocess=preprocess)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=32)
 
-    print(dataset_path[dataset_path.rfind("/") + 1:])
-    class_text = tokenize_class(model, classes_list, templates[dataset_path[dataset_path.rfind("/") + 1:]])
-    # with torch.no_grad():
-    #     text_features = model.encode_text(class_text)
+    dataset_name = dataset_path[dataset_path.rfind("/") + 1:]
+    class_text = tokenize_class(model, origin_classes_list, templates[dataset_path[dataset_path.rfind("/") + 1:]],
+                                dataset_name)
 
     for sample, image_id, file_name_list in dataloader:
         image = sample.to(device)
@@ -475,7 +486,7 @@ def check_dataset(root_path):
         for category in categories_list:
             category_path = os.path.join(train_path, category)
             imgs_list = get_files(category_path)
-            if len(imgs_list)==10:
+            if len(imgs_list) == 10:
                 print("{} {}".format(len(imgs_list), category_path))
 
 
@@ -521,13 +532,15 @@ if __name__ == '__main__':
     # with open(pred_path, 'w') as f:
     #     json.dump(result_list, f)
 
-    # device = "cuda" if torch.cuda.is_available() else "cpu"
-    # model, preprocess = clip.load('ViT-L/14@336px', device)
-    #
-    # dataset_list = get_dirs(base_path)
-    # for dataset in dataset_list:
-    #     dataset_path = os.path.join(base_path, dataset)
-    #     deal_with_dataset(model=model, preprocess=preprocess,
-    #                       device=device, dataset_path=dataset_path)
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    model, preprocess = clip.load('ViT-L/14@336px', device)
 
-    check_dataset(base_path)
+    dataset_list = get_dirs(base_path)
+    for dataset in dataset_list:
+        dataset_path = os.path.join(base_path, dataset)
+        deal_with_dataset(model=model, preprocess=preprocess,
+                          device=device, dataset_path=dataset_path)
+
+    # check_dataset(base_path)
+    for class_name in get_dirs("/Users/xiesicheng/Desktop/media/aicourse/10shot_cifar100_20200721/train"):
+        prepare_for_cifar100(class_name)
