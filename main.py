@@ -417,7 +417,8 @@ def main(args):
             # print("Epoch %d: lr %.7f -> %.7f" % (epoch, before_lr, after_lr))
 
         if args.output_dir:
-            checkpoint_paths = [output_dir / 'checkpoint{}.pth'.format(epoch)]
+            cur_name = 'checkpoint{}.pth'.format(epoch) if epoch+1%10==0 else 'checkpoint.pth'
+            checkpoint_paths = [output_dir / cur_name]
             for checkpoint_path in checkpoint_paths:
                 utils.save_on_master({
                     'model': model_without_ddp.state_dict(),
