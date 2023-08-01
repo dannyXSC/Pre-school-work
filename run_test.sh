@@ -7,5 +7,5 @@ python main.py \
     --weight-decay 0.01 \
     --output_dir output/${model_name} \
     --test_only \
-    --resume "output/${model_name}/checkpoint35.pth" \
+    --resume "output/${model_name}/checkpoint40.pth" \
 #     --lr 1e-4 \
