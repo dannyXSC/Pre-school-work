@@ -1,4 +1,4 @@
-model_name="cait_xxs36_224"
+model_name="cait_xxs24_224"
 python main.py \
     --data-path "/home/aicourse_dataset/" \
     --model ${model_name} \
@@ -7,5 +7,5 @@ python main.py \
     --weight-decay 0.01 \
     --output_dir output/${model_name} \
     --test_only \
-    --resume "output/${model_name}/checkpoint42.pth" \
+    --resume "output/${model_name}/checkpoint18.pth" \
 #     --lr 1e-4 \
